@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "codex": {
+      "type": "stdio",
+      "command": "codex",
+      "args": ["mcp-server"],
+      "env": {}
+    },
+    "gemini-cli": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "gemini-mcp-tool"
+      ],
+      "env": {}
+    },
+    "opencode": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "opencode-mcp"
+      ],
+      "env": {}
+    }
+  }
+}

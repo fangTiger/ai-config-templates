@@ -1,0 +1,11 @@
+# Design Document Generator 依赖
+# 用于生成 Word 和 XML 设计文档
+
+# Word 文档生成
+python-docx>=0.8.11
+
+# Markdown 解析（可选增强）
+# markdown>=3.4.0
+
+# 模板渲染（可选）
+# jinja2>=3.1.0

@@ -1,0 +1,62 @@
+# E2E 测试环境配置
+# 从 e2e_config.example.yaml 复制此文件为 e2e_config.yaml 并填写项目配置
+# 注意：e2e_config.yaml 应加入 .gitignore
+
+e2e:
+  # 基础配置
+  base_url: "http://localhost:8000"
+  timeout: 30                    # 全局请求超时（秒）
+  retries: 2                     # 失败重试次数
+  parallel_workers: "auto"       # 并行数（auto/数字）
+
+  # 认证配置
+  auth:
+    type: "bearer"               # bearer / cookie / basic / none
+    token_url: "/api/auth/token"
+    username: "${E2E_USERNAME}"   # 从环境变量读取
+    password: "${E2E_PASSWORD}"
+
+  # 场景开关
+  scenes:
+    api: true
+    ui: true
+    integration: true
+    evaluation: true
+
+  # UI 测试配置
+  ui:
+    browser: "chromium"          # chromium / firefox / webkit
+    headless: true
+    viewport:
+      width: 1280
+      height: 720
+    screenshot_on_failure: true
+    trace_on_failure: true
+
+  # 后端集成配置
+  integration:
+    database_url: "${E2E_DATABASE_URL}"
+    redis_url: "${E2E_REDIS_URL}"
+    mq_url: "${E2E_MQ_URL}"
+
+  # AI 评测配置
+  evaluation:
+    model_api_url: "${E2E_MODEL_API_URL}"
+    models: []                   # 评测模型列表
+    request_timeout: 180         # 模型请求超时（秒）
+    dataset_dir: "tests/e2e/evaluation/datasets"
+
+  # 报告配置
+  reports:
+    output_dir: "tests/e2e/reports"
+    formats:
+      - "markdown"
+      - "json"
+      - "junit"
+    include_env_context: true
+    sensitive_patterns:          # 报告脱敏匹配词
+      - "password"
+      - "token"
+      - "secret"
+      - "key"
+      - "authorization"

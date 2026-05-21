@@ -1,0 +1,58 @@
+# 依赖和构建产物
+node_modules/
+dist/
+build/
+out/
+.next/
+.nuxt/
+coverage/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+*.egg-info/
+.eggs/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+log/
+
+# 图谱输出（graphify 会自动降级读取）
+graphify-out/
+
+# OpenCode 内部目录
+.opencode/
+
+# 备份文件
+*.bak
+*.backup
+*~
+
+# 大型数据文件
+*.sqlite
+*.db
+*.parquet
+*.csv.gz
+
+# 环境配置（敏感信息）
+.env
+.env.*

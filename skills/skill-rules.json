@@ -1,0 +1,367 @@
+{
+    "version": "1.2",
+    "description": "Skill activation triggers for Claude Code - OpenSpec + Superpowers + Multi-AI Collaboration",
+    "skills": {
+        "openspec-workflow": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "OpenSpec 规范驱动开发工作流，结合 Superpowers 技能体系",
+            "promptTriggers": {
+                "keywords": [
+                    "openspec",
+                    "spec",
+                    "specification",
+                    "proposal",
+                    "提案",
+                    "规范",
+                    "变更",
+                    "新增功能",
+                    "新功能",
+                    "架构变更",
+                    "破坏性变更",
+                    "需求设计",
+                    "方案设计",
+                    "任务拆分",
+                    "审批",
+                    "归档完成",
+                    "requirement",
+                    "design document",
+                    "acceptance criteria",
+                    "/openspec:proposal",
+                    "/openspec:apply",
+                    "/openspec:archive"
+                ],
+                "intentPatterns": [
+                    "(create|write|start|创建|编写).*?(proposal|spec|提案|规范|需求|设计)",
+                    "(check|validate|检查|验证).*?(spec|proposal|规范|提案)",
+                    "(add|implement|新增|实现|添加).*?(feature|功能|能力)",
+                    "(modify|update|refactor|修改|更新|重构).*?(api|架构|API)",
+                    "(archive|归档).*?(change|变更|提案)",
+                    "(apply|实现|执行).*?(proposal|提案|变更)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "openspec/**/*.md",
+                    "openspec/changes/**/proposal.md",
+                    "openspec/changes/**/tasks.md",
+                    "openspec/specs/**/*.md"
+                ],
+                "contentPatterns": [
+                    "## ADDED Requirements",
+                    "## MODIFIED Requirements",
+                    "## REMOVED Requirements",
+                    "#### Scenario:"
+                ]
+            }
+        },
+        "git-workflow": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Git workflow management for team collaboration",
+            "promptTriggers": {
+                "keywords": [
+                    "git",
+                    "commit",
+                    "branch",
+                    "merge",
+                    "pull request",
+                    "PR",
+                    "code review",
+                    "git workflow",
+                    "feature branch",
+                    "hotfix"
+                ],
+                "intentPatterns": [
+                    "(create|make|do).*?(commit|branch|PR|pull request)",
+                    "(merge|rebase).*?branch",
+                    "(review|check).*?(PR|pull request|commit)",
+                    "(how to|best practice).*?(git|commit|branch)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    ".git/**",
+                    ".gitignore",
+                    ".gitmodules"
+                ]
+            }
+        },
+        "python-backend-guidelines": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "medium",
+            "description": "Python/Django/FastAPI backend development guidelines",
+            "promptTriggers": {
+                "keywords": [
+                    "fastapi",
+                    "django",
+                    "flask",
+                    "backend",
+                    "api endpoint",
+                    "route",
+                    "view",
+                    "service layer",
+                    "repository pattern",
+                    "pydantic",
+                    "sqlalchemy",
+                    "orm"
+                ],
+                "intentPatterns": [
+                    "(create|build|implement).*?(api|endpoint|route|view|service)",
+                    "(add|setup).*?(middleware|authentication|validation)",
+                    "(how to|best practice).*?(fastapi|django|backend|python)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "**/*.py",
+                    "**/requirements.txt",
+                    "**/pyproject.toml",
+                    "**/Pipfile"
+                ],
+                "contentPatterns": [
+                    "from fastapi",
+                    "from django",
+                    "from flask",
+                    "APIRouter",
+                    "class.*View"
+                ]
+            }
+        },
+        "python-error-tracking": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "medium",
+            "description": "Sentry error tracking and performance monitoring",
+            "promptTriggers": {
+                "keywords": [
+                    "sentry",
+                    "error tracking",
+                    "error monitoring",
+                    "performance monitoring",
+                    "exception handling",
+                    "error capture"
+                ],
+                "intentPatterns": [
+                    "(add|setup|configure).*?(sentry|error tracking|monitoring)",
+                    "(handle|catch|capture).*?(error|exception)",
+                    "(track|monitor).*?(performance|error)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "**/views.py",
+                    "**/main.py",
+                    "**/app.py",
+                    "**/services.py",
+                    "**/tasks.py",
+                    "**/celery.py",
+                    "**/endpoints/**/*.py",
+                    "**/routers/**/*.py",
+                    "**/*_service.py",
+                    "**/*Service.py"
+                ],
+                "contentPatterns": [
+                    "import sentry_sdk",
+                    "sentry_sdk\\.",
+                    "capture_exception",
+                    "capture_message",
+                    "try:",
+                    "except.*Exception"
+                ]
+            }
+        },
+        "ppt-generator": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "生成符合用友设计规范的PPT素材（SVG图+配套文案）",
+            "promptTriggers": {
+                "keywords": [
+                    "PPT",
+                    "ppt",
+                    "Ppt",
+                    "汇报",
+                    "演示",
+                    "presentation",
+                    "Presentation",
+                    "幻灯片",
+                    "slides",
+                    "技术分享",
+                    "年度总结",
+                    "项目汇报",
+                    "SVG图表",
+                    "演讲稿",
+                    "报告",
+                    "ppt_assets"
+                ],
+                "intentPatterns": [
+                    "(生成|制作|创建|做|写|准备|更新|修改|改|画|设计|整理|弄|搞|出).*?(PPT|ppt|Ppt|汇报|演示|幻灯片|报告|演讲稿)",
+                    "(create|make|generate|write|prepare|update|design).*?(PPT|ppt|presentation|slides|report)",
+                    "(PPT|ppt).*?(素材|模板|内容|页面|封面|架构图)",
+                    "帮.{0,4}(PPT|ppt|汇报|演示|幻灯片)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "**/ppt_assets/**/*.svg",
+                    "**/ppt_assets/**/*.png",
+                    "**/*_presentation.svg",
+                    "**/*_slides.svg"
+                ]
+            }
+        },
+        "document-reader": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "medium",
+            "description": "读取 Word (.docx) 和 Excel (.xlsx/.xls) 文档内容",
+            "promptTriggers": {
+                "keywords": [
+                    "word",
+                    "Word",
+                    "docx",
+                    "excel",
+                    "Excel",
+                    "xlsx",
+                    "xls",
+                    "文档",
+                    "表格",
+                    "读取文档",
+                    "解析文档",
+                    "设计模板",
+                    "design-template",
+                    "Office",
+                    "office"
+                ],
+                "intentPatterns": [
+                    "(读取|打开|解析|提取|分析).*?(word|Word|docx|文档)",
+                    "(读取|打开|解析|提取|分析).*?(excel|Excel|xlsx|xls|表格)",
+                    "(read|open|parse|extract|analyze).*?(word|docx|excel|xlsx)",
+                    "(查看|获取).*?(设计文档|模板|规范)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "**/*.docx",
+                    "**/*.xlsx",
+                    "**/*.xls",
+                    "**/design-template/**"
+                ]
+            }
+        },
+        "e2e-testing": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "端到端测试规范与脚手架，覆盖 API/UI/集成/评测四大场景",
+            "promptTriggers": {
+                "keywords": [
+                    "e2e",
+                    "E2E",
+                    "端到端测试",
+                    "端到端",
+                    "集成测试",
+                    "UI测试",
+                    "API测试",
+                    "模型评测",
+                    "评测脚本",
+                    "测试报告",
+                    "测试规范",
+                    "测试框架",
+                    "冒烟测试",
+                    "回归测试",
+                    "验收测试",
+                    "playwright",
+                    "Playwright",
+                    "pytest-xdist",
+                    "benchmark"
+                ],
+                "intentPatterns": [
+                    "(创建|编写|添加|运行|执行|设置|搭建).*?(e2e|端到端|集成|UI|API|E2E).*?(测试|test)",
+                    "(生成|查看|分析).*?测试报告",
+                    "(评测|评估|benchmark).*?(模型|API|性能)",
+                    "(set up|create|write|run).*?(e2e|end.to.end|integration|UI|API).*?test",
+                    "(generate|view).*?test report"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "tests/e2e/**/*.py",
+                    "tests/e2e/**/*.yaml",
+                    "tests/e2e/**/*.ini",
+                    "**/e2e_config*.yaml"
+                ],
+                "contentPatterns": [
+                    "@pytest.mark.api",
+                    "@pytest.mark.ui",
+                    "@pytest.mark.integration",
+                    "@pytest.mark.evaluation",
+                    "from playwright",
+                    "poll_until",
+                    "ReportCollector",
+                    "EvaluationMetrics"
+                ]
+            }
+        },
+        "design-doc-generator": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "medium",
+            "description": "将 Markdown 设计文档转换为 Word 和 XML 格式",
+            "promptTriggers": {
+                "keywords": [
+                    "生成文档",
+                    "归档",
+                    "转换文档",
+                    "设计文档生成",
+                    "markdown转word",
+                    "md转docx",
+                    "正式文档",
+                    "企业文档",
+                    "评审文档",
+                    "design document",
+                    "generate docx",
+                    "export word"
+                ],
+                "intentPatterns": [
+                    "(生成|创建|转换|导出).*?(设计文档|word|docx|xml)",
+                    "(归档|备份).*?(设计|文档)",
+                    "(generate|create|convert|export).*?(design|document|docx|word)",
+                    "(markdown|md).*?(转换|转|to).*(word|docx)",
+                    "(按照|根据).*?模板.*?(生成|创建)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "**/docs/*-design.md",
+                    "**/docs/plans/*.md",
+                    "**/openspec/changes/**/design.md"
+                ]
+            }
+        }
+    },
+    "notes": {
+        "enforcement_types": {
+            "suggest": "Skill suggestion appears but doesn't block execution",
+            "block": "Requires skill to be used before proceeding (guardrail)",
+            "warn": "Shows warning but allows proceeding"
+        },
+        "priority_levels": {
+            "critical": "Highest - Always trigger when matched",
+            "high": "Important - Trigger for most matches",
+            "medium": "Moderate - Trigger for clear matches",
+            "low": "Optional - Trigger only for explicit matches"
+        },
+        "customization": {
+            "pathPatterns": "Adjust these to match your specific project structure",
+            "keywords": "Add domain-specific terms relevant to your project",
+            "intentPatterns": "Use regex for flexible user intent matching",
+            "multi_ai": "This configuration supports Multi-AI collaboration with Codex and Gemini via MCP",
+            "superpowers": "Superpowers skills are invoked via Skill tool, not through this config"
+        }
+    }
+}
