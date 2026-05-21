@@ -1,0 +1,159 @@
+{
+  "version": "2.0",
+  "description": "Skill activation triggers for the generic codex-codex-claude-flow-dev profile.",
+  "skills": {
+    "openspec-workflow": {
+      "type": "domain",
+      "enforcement": "warn",
+      "priority": "critical",
+      "description": "OpenSpec 规范驱动开发工作流",
+      "promptTriggers": {
+        "keywords": [
+          "openspec",
+          "spec",
+          "规范",
+          "提案",
+          "proposal",
+          "需求",
+          "新增能力",
+          "公共 API",
+          "数据模型",
+          "架构",
+          "权限",
+          "数据访问"
+        ],
+        "intentPatterns": [
+          "(新增|修改|重构|设计).*?(能力|接口|API|架构|权限|数据访问|数据模型)",
+          "(create|add|update|refactor).*?(api|capability|architecture|permission|data access|model)"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": [
+          "openspec/**/*.md",
+          "openspec/**/*.yaml",
+          "openspec/**/*.yml"
+        ]
+      }
+    },
+    "codex-orchestrate": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "codex-codex-claude-flow-dev 编排与任务拆解",
+      "promptTriggers": {
+        "keywords": [
+          "拆解",
+          "编排",
+          "handoff",
+          "交接",
+          "多代理",
+          "Architecture Codex",
+          "Implementation Codex",
+          "Review Codex",
+          "Clarify Gate",
+          "Graphify",
+          "影响面",
+          "开始实现",
+          "任务包"
+        ],
+        "intentPatterns": [
+          "(分析|设计|拆解|规划).*?(任务|实现|开发)",
+          "(handoff|delegate|orchestrate|split).*?(task|implementation)"
+        ]
+      }
+    },
+    "codex-worker-handoff": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "Architecture Codex 向 Implementation Codex 交接实现任务",
+      "promptTriggers": {
+        "keywords": [
+          "交给 Implementation Codex",
+          "Implementation Codex 实现",
+          "handoff",
+          "文件白名单",
+          "allowlist",
+          "developer-instructions"
+        ],
+        "intentPatterns": [
+          "(交接|派工|委托).*?(实现|任务|Implementation Codex)",
+          "(prepare|create).*?(handoff|developer instructions|allowlist)"
+        ]
+      }
+    },
+    "codex-review": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "codex-codex-claude-flow-dev 实现结果审查",
+      "promptTriggers": {
+        "keywords": [
+          "review",
+          "审查",
+          "复审",
+          "验收",
+          "自审",
+          "检查实现",
+          "范围检查"
+        ],
+        "intentPatterns": [
+          "(review|check|validate).*?(implementation|diff|changes|scope)",
+          "(审查|复审|验收|检查).*?(实现|改动|范围|测试)"
+        ]
+      }
+    },
+    "prepare-review": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "Review Codex 启动前整理 diff、OpenSpec/task 对齐、验证证据和风险边界",
+      "promptTriggers": {
+        "keywords": [
+          "prepare-review",
+          "Review Input",
+          "评审准备",
+          "审查输入",
+          "证据缺口",
+          "风险边界",
+          "专项审查"
+        ],
+        "intentPatterns": [
+          "(整理|准备|汇总).*?(review|审查|评审|证据|风险)",
+          "(prepare|summarize).*?(review|evidence|risk|diff)"
+        ]
+      }
+    },
+    "git-workflow": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "description": "Git 分支、提交、PR 和范围检查",
+      "promptTriggers": {
+        "keywords": [
+          "git",
+          "commit",
+          "branch",
+          "merge",
+          "pull request",
+          "PR",
+          "提交",
+          "分支"
+        ],
+        "intentPatterns": [
+          "(创建|提交|合并|推送).*?(分支|commit|PR)",
+          "(create|make|do).*?(commit|branch|PR|pull request)"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": [
+          ".gitignore",
+          ".gitattributes"
+        ]
+      }
+    }
+  },
+  "notes": {
+    "source_of_truth": ".codex is the project-level Codex runtime source. Keep generated .claude settings aligned only when Claude Code is used."
+  }
+}

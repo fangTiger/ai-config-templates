@@ -1,0 +1,11 @@
+# Document Reader 依赖
+# 用于读取 Word 和 Excel 文档
+
+# Word 文档支持 (.docx)
+python-docx>=0.8.11
+
+# Excel 文档支持 (.xlsx)
+openpyxl>=3.0.10
+
+# Excel 旧格式支持 (.xls) - 可选
+xlrd>=2.0.1

@@ -1,0 +1,71 @@
+{
+  "enableAllProjectMcpServers": true,
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "teammateMode": "auto",
+  "enabledPlugins": {
+    "superpowers@superpowers-marketplace": true,
+    "superpowers@claude-plugins-official": false,
+    "everything-claude-code@everything-claude-code": false,
+    "oh-my-claudecode@omc": false,
+    "code-review@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true,
+    "pinecone@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": true
+  },
+  "permissions": {
+    "allow": [
+      "Edit:*",
+      "Write:*",
+      "MultiEdit:*",
+      "NotebookEdit:*",
+      "Bash:*",
+      "mcp__codex__*",
+      "mcp__opencode__*",
+      "WebFetch",
+      "Grep:*",
+      "Glob:*",
+      "Read:*"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(rm -rf /:*)"
+    ],
+    "defaultMode": "acceptEdits"
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/skill-activation-prompt.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Read|Grep|Glob|Edit|MultiEdit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/graphify-query-hook.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/post-tool-use-tracker.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

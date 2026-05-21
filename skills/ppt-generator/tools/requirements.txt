@@ -1,0 +1,9 @@
+# PPT Generator 工具依赖
+# 用于 SVG→PNG 转换和 PPTX 生成
+
+# PPTX 生成
+python-pptx>=0.6.21
+
+# SVG→PNG 转换依赖系统工具 rsvg-convert (librsvg)
+# macOS: brew install librsvg
+# Ubuntu: apt install librsvg2-bin

@@ -1,0 +1,291 @@
+{
+  "version": "2.0",
+  "description": "Skill activation triggers for iuap-aip-data Claude/Codex shared project context.",
+  "skills": {
+    "openspec-workflow": {
+      "type": "domain",
+      "enforcement": "warn",
+      "priority": "critical",
+      "description": "OpenSpec 规范驱动开发工作流",
+      "promptTriggers": {
+        "keywords": [
+          "openspec",
+          "spec",
+          "规范",
+          "提案",
+          "proposal",
+          "需求",
+          "新增能力",
+          "公共 API",
+          "数据模型",
+          "架构",
+          "权限",
+          "数据访问"
+        ],
+        "intentPatterns": [
+          "(新增|修改|重构|设计).*?(能力|接口|API|架构|权限|数据访问|数据模型)",
+          "(create|add|update|refactor).*?(api|capability|architecture|permission|data access|model)"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": [
+          "openspec/**/*.md",
+          "openspec/**/*.yaml",
+          "openspec/**/*.yml"
+        ]
+      }
+    },
+    "java-backend-guidelines": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "Java/Spring/Maven 后端开发约束",
+      "promptTriggers": {
+        "keywords": [
+          "Java",
+          "Spring",
+          "Controller",
+          "Service",
+          "DAO",
+          "DTO",
+          "VO",
+          "YMS JDBC",
+          "Maven",
+          "接口",
+          "异常",
+          "响应",
+          "Resp",
+          "BizException"
+        ],
+        "intentPatterns": [
+          "(新增|修改|实现|修复).*?(Controller|Service|DAO|DTO|VO|接口|异常|响应)",
+          "(add|update|implement|fix).*?(controller|service|dao|dto|api|exception|response)"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": [
+          "src/main/java/**/*.java",
+          "src/test/java/**/*.java",
+          "pom.xml"
+        ]
+      }
+    },
+    "ontology-domain-context": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "ontology/图谱/TTL/Agent 查询领域上下文",
+      "promptTriggers": {
+        "keywords": [
+          "ontology",
+          "本体",
+          "图谱",
+          "TTL",
+          "Jena",
+          "OML",
+          "Agent 查询",
+          "agent/query",
+          "getTableMeta",
+          "getSampleData",
+          "权限过滤",
+          "数据权限"
+        ],
+        "intentPatterns": [
+          "(新增|修改|修复|分析).*?(本体|图谱|TTL|OML|Agent|权限|元数据|样例数据)",
+          "(add|update|fix|analyze).*?(ontology|graph|ttl|oml|agent|permission|metadata|sample data)"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": [
+          "src/main/java/com/yonyou/iuap/aip/data/ontology/**/*.java",
+          "src/test/java/com/yonyou/iuap/aip/data/ontology/**/*.java",
+          "docs/domain/ontology-overview.md",
+          "docs/reference/api/**/*.md",
+          "openspec/specs/*ontology*/**/*.md",
+          "openspec/specs/*ttl*/**/*.md",
+          "openspec/specs/*agent*/**/*.md"
+        ]
+      }
+    },
+    "maven-verification": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "Java/Maven 改动验证命令选择",
+      "promptTriggers": {
+        "keywords": [
+          "测试",
+          "Maven",
+          "mvn",
+          "JUnit",
+          "单测",
+          "运行测试",
+          "测试失败",
+          "构建",
+          "package"
+        ],
+        "intentPatterns": [
+          "(运行|选择|补充).*?(测试|验证|构建|单测)",
+          "(run|choose|add).*?(test|verification|build|maven)"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": [
+          "src/main/java/**/*.java",
+          "src/test/java/**/*.java",
+          "pom.xml"
+        ]
+      }
+    },
+    "prepare-review": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "Review Agent 启动前整理 diff、OpenSpec/task 对齐、验证证据和风险边界",
+      "promptTriggers": {
+        "keywords": [
+          "prepare-review",
+          "Review Input",
+          "评审准备",
+          "审查输入",
+          "证据缺口",
+          "风险边界",
+          "专项审查"
+        ],
+        "intentPatterns": [
+          "(整理|准备|汇总).*?(review|审查|评审|证据|风险)",
+          "(prepare|summarize).*?(review|evidence|risk|diff)"
+        ]
+      }
+    },
+    "permission-security-review": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "认证、授权、租户、数据权限、密钥、公共 API 或外部调用专项审查",
+      "promptTriggers": {
+        "keywords": [
+          "permission-security-review",
+          "认证",
+          "授权",
+          "租户",
+          "数据权限",
+          "密钥",
+          "公共 API",
+          "外部 HTTP",
+          "网关",
+          "UserUtils"
+        ],
+        "intentPatterns": [
+          "(审查|复审|检查).*?(认证|授权|权限|租户|数据权限|密钥|API|HTTP|网关)",
+          "(review|check).*?(auth|permission|tenant|secret|api|http|gateway)"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": [
+          "src/main/java/**/*.java",
+          "src/test/java/**/*.java",
+          "application*.yml",
+          "application*.properties"
+        ]
+      }
+    },
+    "spring-architecture-review": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "Spring Controller、Service、Adaptor、DTO、异常、日志、模块边界或测试结构专项审查",
+      "promptTriggers": {
+        "keywords": [
+          "spring-architecture-review",
+          "Controller",
+          "Service",
+          "Adaptor",
+          "DTO",
+          "VO",
+          "BizException",
+          "模块边界",
+          "日志",
+          "架构审查"
+        ],
+        "intentPatterns": [
+          "(审查|复审|检查).*?(Controller|Service|Adaptor|DTO|VO|异常|日志|模块|架构)",
+          "(review|check).*?(controller|service|adaptor|dto|exception|logging|module|architecture)"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": [
+          "src/main/java/**/*.java",
+          "src/test/java/**/*.java",
+          "docs/guide/*patterns.md"
+        ]
+      }
+    },
+    "sql-risk-review": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "YMS JDBC/ORM、DAO、分页、批量、事务、租户或数据权限过滤专项审查",
+      "promptTriggers": {
+        "keywords": [
+          "sql-risk-review",
+          "SQL",
+          "YMS JDBC",
+          "LambdaQueryCondition",
+          "SQLParameter",
+          "DbAdaptor",
+          "Cypher",
+          "分页",
+          "count",
+          "索引",
+          "全表扫描",
+          "N+1",
+          "事务",
+          "批量"
+        ],
+        "intentPatterns": [
+          "(审查|复审|检查).*?(SQL|YMS|Jdbc|DAO|分页|索引|全表扫描|事务|批量|数据权限|Cypher)",
+          "(review|check).*?(sql|yms|jdbc|dao|pagination|index|transaction|batch|data permission|cypher)"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": [
+          "src/main/java/**/*Dao.java",
+          "src/main/java/**/*Repository.java",
+          "src/test/java/**/*.java"
+        ]
+      }
+    },
+    "git-workflow": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "description": "Git 分支、提交、PR 和范围检查",
+      "promptTriggers": {
+        "keywords": [
+          "git",
+          "commit",
+          "branch",
+          "merge",
+          "pull request",
+          "PR",
+          "提交",
+          "分支"
+        ],
+        "intentPatterns": [
+          "(创建|提交|合并|推送).*?(分支|commit|PR)",
+          "(create|make|do).*?(commit|branch|PR|pull request)"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": [
+          ".gitignore",
+          ".gitattributes"
+        ]
+      }
+    }
+  },
+  "notes": {
+    "source_of_truth": ".codex is the project-level Codex runtime source. Keep generated .claude settings aligned only when Claude Code is used."
+  }
+}

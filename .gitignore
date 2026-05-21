@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.github
+.codex
+!scripts/plugin-profiles/*/.codex/
+!scripts/plugin-profiles/*/.codex/**
+.gemini
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+log/
+
+# Temporary files
+*.tmp
+*.temp
+*.pyc
+
+# Git worktrees (project-local)
+.worktrees/
+
+# Claude Code cache
+.claude/tsc-cache/
+
+# Local settings (personal overrides)
+.claude/
+docs/ontology/code_docs/
+ppt_assets/
+rag-system/
+docs/training/智能服务事业部-打分统计.xlsx
+docs/training/training-grading-report.md
+.omc/sessions/
+venv-rag
+.opencode/plugins/graphify.js
+global/opencode/oh-my-opencode.json
+global/opencode/opencode.json.template
+global/opencode/tui.json
