@@ -28,6 +28,12 @@ cd ~/ai-config-templates
 cd /path/to/your-project
 ~/ai-config-templates/v2/setup-project.sh
 
+# Codex 主用推荐：安装完整 Codex-native GPT-5.5 profile
+~/ai-config-templates/v2/setup-project.sh --mode=codex-codex-claude-flow-gpt55-dev
+
+# Python 项目推荐：安装 Python-first Codex-native profile
+~/ai-config-templates/v2/setup-project.sh --mode=codex-codex-python-dev
+
 # 4. 可选：安装 graphify 并首次建图
 pip install graphifyy
 graphify install
@@ -103,6 +109,13 @@ ai-config-templates/
 Codex 专用 profile：
 
 ```bash
+# V2 推荐：Codex 主工作台（完整 agents/hooks/tools/session-state）
+~/ai-config-templates/v2/scripts/switch-plugin.sh codex-codex-claude-flow-gpt55-dev
+
+# V2 推荐：Python-first Codex 主工作台
+~/ai-config-templates/v2/scripts/switch-plugin.sh codex-codex-python-dev
+
+# V1 兼容路径：仅在旧项目或尚未迁移 V2 时使用
 # 测试验证版，可忽略
 ~/ai-config-templates/scripts/switch-plugin_codex.sh codex-codex-dev
 # 测试验证版，可忽略
