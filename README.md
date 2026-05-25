@@ -22,7 +22,7 @@ mkdir -p ~/aicoding
 git clone <repo-url> ~/aicoding/ai-config-templates
 cd ~/aicoding/ai-config-templates
 
-# 2. 初始化全局配置
+# 2. 初始化全局配置（会安装 ~/.claude/CLAUDE.md 与 ~/.codex/AGENTS.md）
 ./v2/setup-global.sh
 
 # 3. 在目标项目安装项目级配置
@@ -30,10 +30,10 @@ cd /path/to/your-project
 ~/aicoding/ai-config-templates/v2/setup-project.sh
 
 # Codex 主用推荐：安装完整 Codex-native GPT-5.5 profile
-~/ai-config-templates/v2/setup-project.sh --mode=codex-codex-claude-flow-gpt55-dev
+~/aicoding/ai-config-templates/v2/setup-project.sh --mode=codex-codex-claude-flow-gpt55-dev
 
 # Python 项目推荐：安装 Python-first Codex-native profile
-~/ai-config-templates/v2/setup-project.sh --mode=codex-codex-python-dev
+~/aicoding/ai-config-templates/v2/setup-project.sh --mode=codex-codex-python-dev
 
 # 4. 可选：安装 graphify 并首次建图
 pip install graphifyy
@@ -111,10 +111,10 @@ Codex 专用 profile：
 
 ```bash
 # V2 推荐：Codex 主工作台（完整 agents/hooks/tools/session-state）
-~/ai-config-templates/v2/scripts/switch-plugin.sh codex-codex-claude-flow-gpt55-dev
+~/aicoding/ai-config-templates/v2/scripts/switch-plugin.sh codex-codex-claude-flow-gpt55-dev
 
 # V2 推荐：Python-first Codex 主工作台
-~/ai-config-templates/v2/scripts/switch-plugin.sh codex-codex-python-dev
+~/aicoding/ai-config-templates/v2/scripts/switch-plugin.sh codex-codex-python-dev
 
 # V1 兼容路径：仅在旧项目或尚未迁移 V2 时使用
 # 测试验证版，可忽略
