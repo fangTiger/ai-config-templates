@@ -89,7 +89,7 @@ print(f"Mode: {mode}")
 print(f"Java files: {len(files)}")
 
 
-def load_manifest():≈≈≈≈≈≈≈≈≈
+def load_manifest():
     try:
         return json.loads(manifest_path.read_text())
     except Exception:

@@ -13,6 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 V2_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 PROFILES_DIR="$SCRIPT_DIR/plugin-profiles"
 SHARED_DIR="$PROFILES_DIR/shared"
+SHARED_CODEX_DIR="$SHARED_DIR/codex"
 
 PROJECT_DIR="$(pwd)"
 CLAUDE_DIR="$PROJECT_DIR/.claude"
@@ -544,6 +545,13 @@ switch_profile() {
             copy_tree_contents "$SHARED_DIR/hooks" "$CODEX_DIR/hooks"
             copy_tree_contents "$SHARED_DIR/commands" "$CODEX_DIR/commands"
             copy_tree_contents "$SHARED_DIR/skills" "$CODEX_DIR/skills"
+            copy_tree_contents "$SHARED_CODEX_DIR/hooks" "$CODEX_DIR/hooks"
+            copy_tree_contents "$SHARED_CODEX_DIR/commands" "$CODEX_DIR/commands"
+            copy_tree_contents "$SHARED_CODEX_DIR/skills" "$CODEX_DIR/skills"
+            copy_tree_contents "$SHARED_CODEX_DIR/tools" "$CODEX_DIR/tools"
+            if [[ "$target" != "codex-codex-python-dev" ]]; then
+                copy_tree_contents "$SHARED_CODEX_DIR/java/tools" "$CODEX_DIR/tools"
+            fi
             copy_tree_contents "$profile_dir/skills" "$CODEX_DIR/skills"
             copy_tree_contents "$profile_dir/.codex" "$CODEX_DIR"
             copy_session_state "$target"

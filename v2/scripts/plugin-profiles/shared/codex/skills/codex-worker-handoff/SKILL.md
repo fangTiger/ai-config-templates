@@ -1,13 +1,13 @@
 ---
 name: codex-worker-handoff
-description: Orchestrates structured context handoff from Architecture Codex to Implementation Codex for implementation. Use when an approved OpenSpec proposal or approved task package needs implementation in codex-codex-claude-flow-gpt55-dev mode. Handles context packaging, Implementation Codex session startup, file-scope guardrails, progress checkpoints, evidence collection, optional Codex review sync, and review handback.
+description: Orchestrates structured context handoff from Architecture Codex to Implementation Codex for implementation. Use when an approved OpenSpec proposal or approved task package needs implementation in a Codex-native claude-flow mode. Handles context packaging, Implementation Codex session startup, file-scope guardrails, progress checkpoints, evidence collection, optional Codex review sync, and review handback.
 ---
 
 # Codex Worker Handoff — Architecture Codex 向 Implementation Codex 的上下文交接
 
 ## 概述
 
-在 `codex-codex-claude-flow-gpt55-dev` 模式下，Architecture Codex 完成分析、设计与任务拆解后，通过本技能把实现工作交给 Implementation Codex。
+在 Codex-native claude-flow 模式下，Architecture Codex 完成分析、设计与任务拆解后，通过本技能把实现工作交给 Implementation Codex。
 
 本技能覆盖以下流程阶段：
 - Stage 3: HANDOFF
@@ -24,7 +24,7 @@ description: Orchestrates structured context handoff from Architecture Codex to 
 ## 触发条件
 
 满足以下任一情况时使用本技能：
-- 项目根 `AGENTS.md` 明确当前入口契约为 `codex-codex-claude-flow-gpt55-dev`
+- 项目根 `AGENTS.md` 明确当前入口契约为 Codex-native claude-flow profile
 - 已有通过审批的 OpenSpec proposal
 - 已有明确批准的任务包（即使未正式走 OpenSpec）
 - tasks.md 中存在 `Executor: Implementation Codex` 的任务
@@ -162,8 +162,8 @@ Architecture Codex 启动 Implementation Codex 时，应传入：
 启动后，Architecture Codex 必须立即维护项目根 `.codex/session-state.md`，建议结构如下：
 
 ```markdown
-# codex-codex-claude-flow-gpt55-dev Workflow State
-## Mode: codex-codex-claude-flow-gpt55-dev
+# [profile-name] Workflow State
+## Mode: [profile-name]
 ## ActiveTaskStatus: ACTIVE
 ## ChangeId: [change-id]
 ## AgentId: [agent-id]
