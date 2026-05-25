@@ -37,6 +37,7 @@ SHARED_DIR="$PROFILES_DIR/shared"
 GLOBAL_MANIFEST="$HOME/.claude/.harness-manifest.json"
 TARGET_DIR="${1:-.}"
 MIGRATE_MODE=false
+RESET_SESSION_STATE=false
 DEFAULT_MODE="superpowers"
 GRAPHIFY_IGNORE_TEMPLATE="$SCRIPT_DIR/graphifyignore.template"
 
@@ -44,11 +45,112 @@ GRAPHIFY_IGNORE_TEMPLATE="$SCRIPT_DIR/graphifyignore.template"
 for arg in "$@"; do
     case $arg in
         --migrate) MIGRATE_MODE=true; shift ;;
+        --reset-session-state) RESET_SESSION_STATE=true; shift ;;
         --mode=*) DEFAULT_MODE="${arg#*=}"; shift ;;
         -*) ;;
         *) TARGET_DIR="$arg" ;;
     esac
 done
+
+is_codex_native_profile() {
+    local profile_dir=$1
+    [[ -f "$profile_dir/AGENTS.md" && -d "$profile_dir/.codex" ]]
+}
+
+copy_tree_contents() {
+    local src=$1
+    local dst=$2
+
+    if [[ -d "$src" && "$(ls -A "$src" 2>/dev/null)" ]]; then
+        mkdir -p "$dst"
+        cp -R "$src"/. "$dst"/
+    fi
+}
+
+ensure_session_state_field() {
+    local state_file=$1
+    local field_name=$2
+    local default_value=$3
+    local tmp_file
+
+    grep -q "^## $field_name:" "$state_file" && return
+
+    tmp_file="$(mktemp /tmp/codex-session-state-field.XXXXXX)"
+    awk -v line="## $field_name: $default_value" '
+        !inserted && /^## NextPromptSeed:/ {
+            print line
+            inserted = 1
+        }
+        { print }
+        END {
+            if (!inserted) {
+                print line
+            }
+        }
+    ' "$state_file" > "$tmp_file"
+    mv "$tmp_file" "$state_file"
+}
+
+normalize_session_state_from_template() {
+    local state_file=$1
+    local template_file=$2
+
+    if grep -q '^## CompletedTasks:' "$template_file"; then
+        ensure_session_state_field "$state_file" "CompletedTasks" "[]"
+    fi
+
+    if grep -q '^## PendingTasks:' "$template_file"; then
+        ensure_session_state_field "$state_file" "PendingTasks" "[]"
+    fi
+
+    if grep -q '^## DegradationCount:' "$template_file"; then
+        ensure_session_state_field "$state_file" "DegradationCount" "0"
+    fi
+}
+
+validate_session_state_file() {
+    local state_file=$1
+    local profile_name=$2
+
+    [[ -s "$state_file" ]] || return 1
+    grep -q "^# $profile_name Workflow State" "$state_file" || return 1
+    grep -q "^## Mode: $profile_name" "$state_file" || return 1
+    grep -q '^## ChangeId:' "$state_file" || return 1
+    grep -q '^## Current Stage:' "$state_file" || return 1
+}
+
+install_codex_session_state() {
+    local target_state="$CODEX_DIR/session-state.md"
+    local target_template="$CODEX_DIR/session-state.template.md"
+
+    [[ -f "$target_template" ]] || return
+
+    if [[ "$RESET_SESSION_STATE" == true || ! -s "$target_state" ]]; then
+        cp "$target_template" "$target_state"
+        return
+    fi
+
+    if validate_session_state_file "$target_state" "$DEFAULT_MODE"; then
+        normalize_session_state_from_template "$target_state" "$target_template"
+    else
+        cp "$target_template" "$target_state"
+        print_info "现有 .codex/session-state.md 与 $DEFAULT_MODE 不匹配，已按模板初始化"
+    fi
+}
+
+available_profiles() {
+    local profiles=()
+    local profile_dir
+
+    for profile_dir in "$PROFILES_DIR"/*/; do
+        local name
+        name="$(basename "$profile_dir")"
+        [[ "$name" == "shared" ]] && continue
+        profiles+=("$name")
+    done
+
+    printf "%s " "${profiles[@]}"
+}
 
 echo -e "${BLUE}═══════════════════════════════════════════════${NC}"
 echo -e "${BLUE}  Claude Code V2 Project Setup${NC}"
@@ -131,7 +233,7 @@ fi
 # 检查 profile 是否存在
 if [ ! -d "$PROFILES_DIR/$DEFAULT_MODE" ]; then
     print_error "模式 '$DEFAULT_MODE' 不存在"
-    print_info "可用模式: superpowers, ecc, omc, teams, codex-dev"
+    print_info "可用模式: $(available_profiles)"
     exit 1
 fi
 
@@ -176,8 +278,20 @@ echo -e "${CYAN}  Step 3: 安装 $DEFAULT_MODE 模式${NC}"
 
 PROFILE_DIR="$PROFILES_DIR/$DEFAULT_MODE"
 
-# 复制模式 CLAUDE.md
-if [ -f "$PROFILE_DIR/CLAUDE.md" ]; then
+if is_codex_native_profile "$PROFILE_DIR"; then
+    # Codex-native profile 以 AGENTS.md 和 .codex/ 为主入口。
+    if [ -f "$TARGET_DIR/AGENTS.md" ]; then
+        print_info "项目 AGENTS.md 已存在，备份中..."
+        mv "$TARGET_DIR/AGENTS.md" "$TARGET_DIR/AGENTS.md.backup.$(date +%Y%m%d%H%M%S)"
+    fi
+    cp "$PROFILE_DIR/AGENTS.md" "$TARGET_DIR/AGENTS.md"
+    print_success "项目 AGENTS.md 已安装 ($DEFAULT_MODE 模式)"
+
+    if [ -f "$TARGET_DIR/CLAUDE.md" ]; then
+        print_info "Codex-native 模式不使用根 CLAUDE.md，备份中..."
+        mv "$TARGET_DIR/CLAUDE.md" "$TARGET_DIR/CLAUDE.md.backup.$(date +%Y%m%d%H%M%S)"
+    fi
+elif [ -f "$PROFILE_DIR/CLAUDE.md" ]; then
     if [ -f "$TARGET_DIR/CLAUDE.md" ]; then
         print_info "项目 CLAUDE.md 已存在，备份中..."
         mv "$TARGET_DIR/CLAUDE.md" "$TARGET_DIR/CLAUDE.md.backup.$(date +%Y%m%d%H%M%S)"
@@ -195,24 +309,34 @@ if [ -f "$PROFILE_DIR/settings.json" ]; then
     print_success "settings.json 已安装"
 fi
 
-# 复制模式特有资源
-for dir in skills agents rules; do
-    if [ -d "$PROFILE_DIR/$dir" ] && [ "$(ls -A "$PROFILE_DIR/$dir" 2>/dev/null)" ]; then
-        cp -r "$PROFILE_DIR/$dir/"* "$CLAUDE_DIR/$dir/" 2>/dev/null || true
-        print_success "$dir/ 资源已安装"
+if is_codex_native_profile "$PROFILE_DIR"; then
+    copy_tree_contents "$SHARED_DIR/hooks" "$CODEX_DIR/hooks"
+    copy_tree_contents "$SHARED_DIR/commands" "$CODEX_DIR/commands"
+    copy_tree_contents "$SHARED_DIR/skills" "$CODEX_DIR/skills"
+    copy_tree_contents "$PROFILE_DIR/skills" "$CODEX_DIR/skills"
+    copy_tree_contents "$PROFILE_DIR/.codex" "$CODEX_DIR"
+    install_codex_session_state
+    chmod +x "$CODEX_DIR/hooks/"*.sh "$CODEX_DIR/tools/"*.sh 2>/dev/null || true
+    print_success "Codex-native .codex 资源已安装"
+else
+    # 复制模式特有资源
+    for dir in skills agents rules; do
+        if [ -d "$PROFILE_DIR/$dir" ] && [ "$(ls -A "$PROFILE_DIR/$dir" 2>/dev/null)" ]; then
+            cp -r "$PROFILE_DIR/$dir/"* "$CLAUDE_DIR/$dir/" 2>/dev/null || true
+            print_success "$dir/ 资源已安装"
+        fi
+    done
+
+    if [ -d "$PROFILE_DIR/codex/skills" ] && [ "$(ls -A "$PROFILE_DIR/codex/skills" 2>/dev/null)" ]; then
+        cp -r "$PROFILE_DIR/codex/skills/"* "$CODEX_DIR/skills/" 2>/dev/null || true
+        print_success "codex/skills 资源已安装"
     fi
-done
 
-if [ -d "$PROFILE_DIR/codex/skills" ] && [ "$(ls -A "$PROFILE_DIR/codex/skills" 2>/dev/null)" ]; then
-    cp -r "$PROFILE_DIR/codex/skills/"* "$CODEX_DIR/skills/" 2>/dev/null || true
-    print_success "codex/skills 资源已安装"
-fi
+    if [ -f "$CODEX_DIR/hooks.json" ]; then
+        mv "$CODEX_DIR/hooks.json" "$CODEX_DIR/hooks.json.backup.$(date +%Y%m%d%H%M%S)"
+    fi
 
-if [ -f "$CODEX_DIR/hooks.json" ]; then
-    mv "$CODEX_DIR/hooks.json" "$CODEX_DIR/hooks.json.backup.$(date +%Y%m%d%H%M%S)"
-fi
-
-cat > "$CODEX_DIR/hooks.json" << 'HOOKSEOF'
+    cat > "$CODEX_DIR/hooks.json" << 'HOOKSEOF'
 {
   "hooks": {
     "PreToolUse": [
@@ -229,7 +353,8 @@ cat > "$CODEX_DIR/hooks.json" << 'HOOKSEOF'
   }
 }
 HOOKSEOF
-print_success ".codex/hooks.json 已安装"
+    print_success ".codex/hooks.json 已安装"
+fi
 
 if [ -f "$TARGET_DIR/.graphifyignore" ]; then
     print_info ".graphifyignore 已存在，跳过"
@@ -324,11 +449,16 @@ echo ""
 # ═══════════════════════════════════════════════
 echo -e "${CYAN}  Step 7: 项目 Manifest${NC}"
 
-# 计算项目 CLAUDE.md hash
+# 计算项目 profile 入口文件 hash
+HASH_SOURCE="$TARGET_DIR/CLAUDE.md"
+if is_codex_native_profile "$PROFILE_DIR"; then
+    HASH_SOURCE="$TARGET_DIR/AGENTS.md"
+fi
+
 if command -v shasum &> /dev/null; then
-    PROJ_HASH=$(shasum -a 256 "$TARGET_DIR/CLAUDE.md" 2>/dev/null | cut -d' ' -f1 | head -c 12)
+    PROJ_HASH=$(shasum -a 256 "$HASH_SOURCE" 2>/dev/null | cut -d' ' -f1 | head -c 12)
 elif command -v sha256sum &> /dev/null; then
-    PROJ_HASH=$(sha256sum "$TARGET_DIR/CLAUDE.md" 2>/dev/null | cut -d' ' -f1 | head -c 12)
+    PROJ_HASH=$(sha256sum "$HASH_SOURCE" 2>/dev/null | cut -d' ' -f1 | head -c 12)
 else
     PROJ_HASH="unknown"
 fi
@@ -350,6 +480,7 @@ cat > "$PROJECT_MANIFEST" << MANIFESTEOF
   "templateHash": "$PROJ_HASH",
   "managedAssets": [
     "CLAUDE.md",
+    "AGENTS.md",
     ".claude/settings.json",
     ".claude/skills",
     ".claude/agents",
@@ -358,7 +489,13 @@ cat > "$PROJECT_MANIFEST" << MANIFESTEOF
     ".claude/rules",
     ".codex/hooks.json",
     ".codex/hooks",
+    ".codex/agents",
+    ".codex/commands",
     ".codex/skills",
+    ".codex/tools",
+    ".codex/config.toml",
+    ".codex/session-state.md",
+    ".codex/session-state.template.md",
     ".graphifyignore"
   ],
   "installedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
@@ -382,10 +519,16 @@ echo ""
 echo -e "${CYAN}  Step 8: 验证${NC}"
 ok=true
 
-[ -f "$TARGET_DIR/CLAUDE.md" ] && print_success "CLAUDE.md 存在" || { print_error "CLAUDE.md 缺失"; ok=false; }
+if is_codex_native_profile "$PROFILE_DIR"; then
+    [ -f "$TARGET_DIR/AGENTS.md" ] && print_success "AGENTS.md 存在" || { print_error "AGENTS.md 缺失"; ok=false; }
+    [ -f "$CODEX_DIR/config.toml" ] && print_success ".codex/config.toml 存在" || { print_error ".codex/config.toml 缺失"; ok=false; }
+    [ -f "$CODEX_DIR/session-state.md" ] && print_success ".codex/session-state.md 存在" || { print_error ".codex/session-state.md 缺失"; ok=false; }
+else
+    [ -f "$TARGET_DIR/CLAUDE.md" ] && print_success "CLAUDE.md 存在" || { print_error "CLAUDE.md 缺失"; ok=false; }
+fi
 [ -f "$CLAUDE_DIR/settings.json" ] && print_success "settings.json 存在" || { print_error "settings.json 缺失"; ok=false; }
 [ -f "$PROJECT_MANIFEST" ] && print_success "manifest 存在" || { print_error "manifest 缺失"; ok=false; }
-[ -f "$CLAUDE_DIR/hooks/graphify-query-hook.sh" ] && print_success "Claude graphify hook 存在" || { print_error "Claude graphify hook 缺失"; ok=false; }
+[ -f "$CLAUDE_DIR/hooks/graphify-query-hook.sh" ] && print_success "Claude graphify hook 存在" || print_info "Claude graphify hook 未安装"
 [ -f "$CODEX_DIR/hooks.json" ] && print_success ".codex/hooks.json 存在" || { print_error ".codex/hooks.json 缺失"; ok=false; }
 [ -f "$CODEX_DIR/hooks/graphify-query-hook.sh" ] && print_success "Codex graphify hook 存在" || { print_error "Codex graphify hook 缺失"; ok=false; }
 [ -d "$PROFILE_DIR/codex/skills" ] && [ "$(ls -A "$PROFILE_DIR/codex/skills" 2>/dev/null)" ] && (
@@ -393,17 +536,19 @@ ok=true
 ) || [ ! -d "$PROFILE_DIR/codex/skills" ] || { print_error "Codex skills 缺失"; ok=false; }
 [ -f "$TARGET_DIR/.graphifyignore" ] && print_success ".graphifyignore 存在" || print_info ".graphifyignore 未安装"
 
-if grep -q "harness-version: v2" "$TARGET_DIR/CLAUDE.md" 2>/dev/null; then
-    print_success "CLAUDE.md 包含 V2 标记"
-else
-    print_error "CLAUDE.md 缺少 V2 标记"
-    ok=false
-fi
+if ! is_codex_native_profile "$PROFILE_DIR"; then
+    if grep -q "harness-version: v2" "$TARGET_DIR/CLAUDE.md" 2>/dev/null; then
+        print_success "CLAUDE.md 包含 V2 标记"
+    else
+        print_error "CLAUDE.md 缺少 V2 标记"
+        ok=false
+    fi
 
-if grep -q "harness-mode: $DEFAULT_MODE" "$TARGET_DIR/CLAUDE.md" 2>/dev/null; then
-    print_success "CLAUDE.md 标记模式: $DEFAULT_MODE"
-else
-    print_info "CLAUDE.md 模式标记未检测到（可能格式不同）"
+    if grep -q "harness-mode: $DEFAULT_MODE" "$TARGET_DIR/CLAUDE.md" 2>/dev/null; then
+        print_success "CLAUDE.md 标记模式: $DEFAULT_MODE"
+    else
+        print_info "CLAUDE.md 模式标记未检测到（可能格式不同）"
+    fi
 fi
 
 echo ""
@@ -419,6 +564,6 @@ echo ""
 print_step "下一步："
 echo "  1. 启动 Claude Code 会话"
 echo "  2. 切换模式: $SCRIPT_DIR/scripts/switch-plugin.sh [mode]"
-echo "  3. 可用模式: superpowers, ecc, omc, teams, codex-dev"
+echo "  3. 可用模式: $(available_profiles)"
 echo ""
 echo -e "${GREEN}V2 项目配置就绪！${NC}"

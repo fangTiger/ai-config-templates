@@ -1,0 +1,161 @@
+{
+  "version": "2.0",
+  "description": "Skill activation triggers for the independent codex-codex-python-dev profile.",
+  "skills": {
+    "codex-python-bootstrap": {
+      "type": "domain",
+      "enforcement": "warn",
+      "priority": "critical",
+      "description": "空 Python 项目起步：检测后先创建 OpenSpec 初始化提案",
+      "promptTriggers": {
+        "keywords": [
+          "Python 初始化",
+          "空项目",
+          "起步",
+          "bootstrap",
+          "scaffold",
+          "pyproject",
+          "创建 Python 项目"
+        ],
+        "intentPatterns": [
+          "(初始化|创建|搭建|起步).*?(Python|python|项目)",
+          "(bootstrap|scaffold|create).*?(Python|python).*?(project|package|app)"
+        ]
+      }
+    },
+    "codex-python-project": {
+      "type": "domain",
+      "enforcement": "warn",
+      "priority": "high",
+      "description": "读取 Python 项目结构、依赖、虚拟环境和验证入口",
+      "promptTriggers": {
+        "keywords": [
+          "Python",
+          "pytest",
+          "venv",
+          ".venv",
+          "requirements",
+          "pyproject.toml",
+          "包结构",
+          "测试命令"
+        ],
+        "intentPatterns": [
+          "(分析|读取|检查).*?(Python|python).*?(结构|依赖|环境|测试)",
+          "(detect|inspect).*?(Python|python).*?(project|layout|dependencies)"
+        ]
+      }
+    },
+    "codex-python-testing": {
+      "type": "domain",
+      "enforcement": "warn",
+      "priority": "high",
+      "description": "按检测结果执行 Python RED-GREEN-REFACTOR",
+      "promptTriggers": {
+        "keywords": [
+          "pytest",
+          "TDD",
+          "RED",
+          "GREEN",
+          "测试先行",
+          "单元测试"
+        ],
+        "intentPatterns": [
+          "(写|补|跑|修).*?(测试|pytest|TDD)",
+          "(test|pytest|red|green).*?(Python|python)"
+        ]
+      }
+    },
+    "codex-python-security": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "Python 后端安全边界检查，不默认框架或外部服务",
+      "promptTriggers": {
+        "keywords": [
+          "认证",
+          "授权",
+          "密钥",
+          "Sentry",
+          "FastAPI",
+          "Django",
+          "数据库",
+          "API"
+        ],
+        "intentPatterns": [
+          "(认证|授权|密钥|数据权限|安全).*?(Python|python|API|接口)",
+          "(auth|secret|permission|security).*?(Python|python|api)"
+        ]
+      }
+    },
+    "openspec-workflow": {
+      "type": "domain",
+      "enforcement": "warn",
+      "priority": "critical",
+      "description": "OpenSpec 规范驱动开发工作流",
+      "promptTriggers": {
+        "keywords": [
+          "openspec",
+          "spec",
+          "规范",
+          "提案",
+          "proposal",
+          "需求",
+          "新增能力",
+          "公共 API",
+          "数据模型",
+          "架构",
+          "权限",
+          "数据访问"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": [
+          "openspec/**/*.md",
+          "openspec/**/*.yaml",
+          "openspec/**/*.yml"
+        ]
+      }
+    },
+    "codex-orchestrate": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "Python profile 编排与任务拆解",
+      "promptTriggers": {
+        "keywords": [
+          "拆解",
+          "编排",
+          "handoff",
+          "交接",
+          "Architecture Codex",
+          "Implementation Codex",
+          "Review Codex",
+          "Clarify Gate",
+          "Graphify",
+          "影响面",
+          "PythonDetection",
+          "开始实现",
+          "任务包"
+        ]
+      }
+    },
+    "codex-review": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "Python profile 实现结果审查",
+      "promptTriggers": {
+        "keywords": [
+          "review",
+          "审查",
+          "复审",
+          "验收",
+          "范围检查"
+        ]
+      }
+    }
+  },
+  "notes": {
+    "source_of_truth": "Run .codex/tools/detect-python-project.sh before Python implementation or bootstrap decisions."
+  }
+}
