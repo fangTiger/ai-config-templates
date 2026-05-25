@@ -17,16 +17,17 @@
 ### 推荐路径：V2
 
 ```bash
-# 1. 克隆到任意位置
-git clone <repo-url> ~/ai-config-templates
-cd ~/ai-config-templates
+# 1. 克隆到用户目录下的独立工具目录（不要放到 ~/.claude 这类运行态目录）
+mkdir -p ~/aicoding
+git clone <repo-url> ~/aicoding/ai-config-templates
+cd ~/aicoding/ai-config-templates
 
 # 2. 初始化全局配置
 ./v2/setup-global.sh
 
 # 3. 在目标项目安装项目级配置
 cd /path/to/your-project
-~/ai-config-templates/v2/setup-project.sh
+~/aicoding/ai-config-templates/v2/setup-project.sh
 
 # 4. 可选：安装 graphify 并首次建图
 pip install graphifyy
@@ -51,7 +52,7 @@ V2 的好处：
 ./setup-claude-config.sh /path/to/your-project
 ```
 
-`setup-claude-config.sh` 已改为从脚本所在仓库读取模板，所以这个脚手架不要求固定放在 `~/.claude/config-templates`。
+`setup-claude-config.sh` 已改为从脚本所在仓库读取模板，所以这个脚手架不要求固定放在 `~/.claude/config-templates`；`.claude/` 只作为工具运行态和最终落盘配置目录。
 
 ## 目录结构
 
@@ -89,28 +90,28 @@ ai-config-templates/
 
 ```bash
 # Claude Code profile
-~/ai-config-templates/scripts/switch-plugin.sh superpowers
-~/ai-config-templates/scripts/switch-plugin.sh ecc
-~/ai-config-templates/scripts/switch-plugin.sh omc
-~/ai-config-templates/scripts/switch-plugin.sh teams
-~/ai-config-templates/scripts/switch-plugin.sh codex-dev
+~/aicoding/ai-config-templates/scripts/switch-plugin.sh superpowers
+~/aicoding/ai-config-templates/scripts/switch-plugin.sh ecc
+~/aicoding/ai-config-templates/scripts/switch-plugin.sh omc
+~/aicoding/ai-config-templates/scripts/switch-plugin.sh teams
+~/aicoding/ai-config-templates/scripts/switch-plugin.sh codex-dev
 
 # 状态和预览
-~/ai-config-templates/scripts/switch-plugin.sh --status
-~/ai-config-templates/scripts/switch-plugin.sh ecc --dry-run
+~/aicoding/ai-config-templates/scripts/switch-plugin.sh --status
+~/aicoding/ai-config-templates/scripts/switch-plugin.sh ecc --dry-run
 ```
 
 Codex 专用 profile：
 
 ```bash
 # 测试验证版，可忽略
-~/ai-config-templates/scripts/switch-plugin_codex.sh codex-codex-dev
+~/aicoding/ai-config-templates/scripts/switch-plugin_codex.sh codex-codex-dev
 # 测试验证版，可忽略
-~/ai-config-templates/scripts/switch-plugin_codex.sh codex-codex-claude-flow-dev
+~/aicoding/ai-config-templates/scripts/switch-plugin_codex.sh codex-codex-claude-flow-dev
 # 主 agent 5.5-xhigh woker、review-5.4-xhigh
-~/ai-config-templates/scripts/switch-plugin_codex.sh codex-codex-claude-flow-gpt55-dev
+~/aicoding/ai-config-templates/scripts/switch-plugin_codex.sh codex-codex-claude-flow-gpt55-dev
 # 测试验证python版，可忽略
-~/ai-config-templates/scripts/switch-plugin_codex.sh codex-codex-python-dev
+~/aicoding/ai-config-templates/scripts/switch-plugin_codex.sh codex-codex-python-dev
 ```
 
 切换后重启对应 AI CLI 会话，让新的项目级配置生效。
