@@ -43,6 +43,20 @@ def make_env(tmp_path):
     return env
 
 
+def install_mock_claude(env):
+    bin_dir = Path(env["PATH"].split(os.pathsep)[0])
+    claude = bin_dir / "claude"
+    claude.write_text(
+        "#!/bin/sh\n"
+        "if [ \"$1\" = \"plugin\" ] && [ \"$2\" = \"list\" ]; then\n"
+        "  echo superpowers\n"
+        "fi\n"
+        "exit 0\n",
+        encoding="utf-8",
+    )
+    claude.chmod(0o755)
+
+
 def make_v2_project(tmp_path, env, mode="codex-dev"):
     project = tmp_path / "project"
     project.mkdir()
@@ -67,6 +81,27 @@ class V2CodexProfileTests(unittest.TestCase):
 
     def tearDown(self):
         self.tmp.cleanup()
+
+    def test_v2_global_setup_installs_codex_global_agents(self):
+        install_mock_claude(self.env)
+
+        result = run_cmd(
+            [str(REPO_ROOT / "v2" / "setup-global.sh")],
+            cwd=REPO_ROOT,
+            env=self.env,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        codex_dir = self.tmp_path / "home" / ".codex"
+        agents = codex_dir / "AGENTS.md"
+        self.assertTrue(agents.is_file())
+        agents_text = agents.read_text(encoding="utf-8")
+        self.assertIn("harness-version: v2", agents_text)
+        self.assertIn("harness-target: codex", agents_text)
+        self.assertTrue((codex_dir / "skills" / "using-superpowers" / "SKILL.md").is_file())
+        manifest = json.loads((codex_dir / ".harness-manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["target"], "codex")
+        self.assertIn("AGENTS.md", manifest["managedAssets"])
 
     def test_v2_lists_codex_native_profiles(self):
         project = make_v2_project(self.tmp_path, self.env)
