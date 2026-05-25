@@ -1,0 +1,183 @@
+import json
+import os
+import subprocess
+import tempfile
+import unittest
+from pathlib import Path
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def run_cmd(args, cwd, env):
+    return subprocess.run(
+        args,
+        cwd=cwd,
+        env=env,
+        input="n\nn\nn\n",
+        text=True,
+        errors="replace",
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=30,
+    )
+
+
+def make_env(tmp_path):
+    home = tmp_path / "home"
+    home.mkdir()
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    npm = bin_dir / "npm"
+    npm.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    npm.chmod(0o755)
+    claude_dir = home / ".claude"
+    claude_dir.mkdir()
+    (claude_dir / ".harness-manifest.json").write_text(
+        json.dumps({"harnessVersion": "v2"}),
+        encoding="utf-8",
+    )
+    env = os.environ.copy()
+    env["HOME"] = str(home)
+    env["PATH"] = f"{bin_dir}{os.pathsep}{env.get('PATH', '')}"
+    return env
+
+
+def make_v2_project(tmp_path, env, mode="codex-dev"):
+    project = tmp_path / "project"
+    project.mkdir()
+    result = run_cmd(
+        [str(REPO_ROOT / "v2" / "setup-project.sh"), f"--mode={mode}", str(project)],
+        cwd=REPO_ROOT,
+        env=env,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    return project
+
+
+def read_project_manifest(project):
+    return json.loads((project / ".claude" / ".harness-manifest.json").read_text(encoding="utf-8"))
+
+
+class V2CodexProfileTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.tmp_path = Path(self.tmp.name)
+        self.env = make_env(self.tmp_path)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_v2_lists_codex_native_profiles(self):
+        project = make_v2_project(self.tmp_path, self.env)
+
+        result = run_cmd(
+            [str(REPO_ROOT / "v2" / "scripts" / "switch-plugin.sh"), "--list"],
+            cwd=project,
+            env=self.env,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("codex-codex-dev", result.stdout)
+        self.assertIn("codex-codex-claude-flow-dev", result.stdout)
+        self.assertIn("codex-codex-claude-flow-gpt55-dev", result.stdout)
+        self.assertIn("codex-codex-python-dev", result.stdout)
+
+    def test_v2_status_reports_codex_native_profiles(self):
+        project = make_v2_project(self.tmp_path, self.env, mode="codex-codex-claude-flow-gpt55-dev")
+
+        result = run_cmd(
+            [str(REPO_ROOT / "v2" / "scripts" / "switch-plugin.sh"), "--status"],
+            cwd=project,
+            env=self.env,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("当前模式:", result.stdout)
+        self.assertIn("codex-codex-claude-flow-gpt55-dev", result.stdout)
+        self.assertIn("codex-codex-python-dev", result.stdout)
+
+    def test_v2_switch_rejects_unknown_profile(self):
+        project = make_v2_project(self.tmp_path, self.env)
+
+        result = run_cmd(
+            [str(REPO_ROOT / "v2" / "scripts" / "switch-plugin.sh"), "missing-profile"],
+            cwd=project,
+            env=self.env,
+        )
+
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("未知 profile", result.stdout)
+
+    def test_v2_setup_installs_gpt55_codex_native_profile(self):
+        project = make_v2_project(self.tmp_path, self.env, mode="codex-codex-claude-flow-gpt55-dev")
+
+        self.assertTrue((project / "AGENTS.md").is_file())
+        self.assertTrue((project / ".codex" / "config.toml").is_file())
+        self.assertTrue((project / ".codex" / "agents" / "worker-codex.toml").is_file())
+        self.assertTrue((project / ".codex" / "agents" / "review-codex.toml").is_file())
+        self.assertTrue((project / ".codex" / "hooks.json").is_file())
+        self.assertTrue((project / ".codex" / "hooks" / "graphify-query-hook.sh").is_file())
+        self.assertTrue((project / ".codex" / "hooks" / "post-tool-use-tracker.sh").is_file())
+        self.assertTrue((project / ".codex" / "hooks" / "skill-activation-prompt.sh").is_file())
+        self.assertTrue((project / ".codex" / "hooks" / "skill-activation-prompt.cjs").is_file())
+        self.assertTrue((project / ".codex" / "tools" / "runtime-verification-summary.sh").is_file())
+        self.assertTrue((project / ".codex" / "tools" / "graphify-java-project.sh").is_file())
+        self.assertTrue((project / ".codex" / "session-state.md").is_file())
+        self.assertTrue((project / ".codex" / "session-state.template.md").is_file())
+        self.assertEqual(read_project_manifest(project)["mode"], "codex-codex-claude-flow-gpt55-dev")
+
+    def test_v2_setup_installs_python_codex_native_profile(self):
+        project = make_v2_project(self.tmp_path, self.env, mode="codex-codex-python-dev")
+
+        self.assertTrue((project / ".codex" / "tools" / "detect-python-project.sh").is_file())
+        self.assertTrue((project / ".codex" / "tools" / "verify-python-project.sh").is_file())
+        self.assertTrue((project / ".codex" / "tools" / "graphify-python-project.sh").is_file())
+        self.assertTrue((project / ".codex" / "skills" / "codex-python-bootstrap" / "SKILL.md").is_file())
+        self.assertTrue((project / ".codex" / "skills" / "codex-python-project" / "SKILL.md").is_file())
+        self.assertTrue((project / ".codex" / "skills" / "codex-python-testing" / "SKILL.md").is_file())
+        self.assertTrue((project / ".codex" / "skills" / "codex-python-security" / "SKILL.md").is_file())
+        self.assertEqual(read_project_manifest(project)["mode"], "codex-codex-python-dev")
+
+    def test_v2_switch_preserves_session_state_by_default_and_resets_on_request(self):
+        project = make_v2_project(self.tmp_path, self.env, mode="codex-codex-claude-flow-gpt55-dev")
+        state_file = project / ".codex" / "session-state.md"
+        original = state_file.read_text(encoding="utf-8")
+        marker = "\n## CustomNote: keep-me\n"
+        state_file.write_text(original + marker, encoding="utf-8")
+
+        switcher = REPO_ROOT / "v2" / "scripts" / "switch-plugin.sh"
+        result = run_cmd([str(switcher), "codex-codex-claude-flow-gpt55-dev"], cwd=project, env=self.env)
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("CustomNote: keep-me", state_file.read_text(encoding="utf-8"))
+
+        result = run_cmd(
+            [str(switcher), "codex-codex-claude-flow-gpt55-dev", "--reset-session-state"],
+            cwd=project,
+            env=self.env,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        reset_state = state_file.read_text(encoding="utf-8")
+        self.assertNotIn("CustomNote: keep-me", reset_state)
+        self.assertIn("# codex-codex-claude-flow-gpt55-dev Workflow State", reset_state)
+
+    def test_v2_switch_back_to_superpowers_replaces_codex_native_assets(self):
+        project = make_v2_project(self.tmp_path, self.env, mode="codex-codex-claude-flow-gpt55-dev")
+        self.assertTrue((project / "AGENTS.md").is_file())
+
+        result = run_cmd(
+            [str(REPO_ROOT / "v2" / "scripts" / "switch-plugin.sh"), "superpowers"],
+            cwd=project,
+            env=self.env,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue((project / "CLAUDE.md").is_file())
+        self.assertFalse((project / ".codex" / "agents" / "worker-codex.toml").exists())
+        self.assertEqual(read_project_manifest(project)["mode"], "superpowers")
+
+
+if __name__ == "__main__":
+    unittest.main()
