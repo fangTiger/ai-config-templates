@@ -1,13 +1,13 @@
 ---
 name: codex-orchestrate
-description: Orchestrates codex-codex-claude-flow-gpt55-dev workflow. Use when the Architecture Codex needs to analyze a coding request, decide whether OpenSpec is required, split tasks, prepare implementation handoff, and manage Implementation Codex execution boundaries.
+description: Orchestrates Codex-native claude-flow workflow. Use when the Architecture Codex needs to analyze a coding request, decide whether OpenSpec is required, split tasks, prepare implementation handoff, and manage Implementation Codex execution boundaries.
 ---
 
 # Codex Orchestrate — Architecture Codex 编排技能
 
 ## 概述
 
-在 `codex-codex-claude-flow-gpt55-dev` 模式下，Architecture Codex 使用本技能完成：
+在 Codex-native claude-flow 模式下，Architecture Codex 使用本技能完成：
 - 任务分级（小 / 中 / 大）
 - 是否需要 OpenSpec 的判断
 - Graphify 强制 Gate 与影响面判断
@@ -19,7 +19,7 @@ description: Orchestrates codex-codex-claude-flow-gpt55-dev workflow. Use when t
 
 ## 触发条件
 
-- 项目根 `AGENTS.md` 明确当前入口契约为 `codex-codex-claude-flow-gpt55-dev`
+- 项目根 `AGENTS.md` 明确当前入口契约为 Codex-native claude-flow profile
 - 用户提出中等及以上复杂度的开发需求
 - 关键词：实现、设计、拆解、编排、开始开发、开始实现、handoff、交接、审查、Clarify Gate、Graphify、影响面
 

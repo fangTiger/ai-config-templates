@@ -1,13 +1,13 @@
 ---
 name: codex-review
-description: Reviews Implementation Codex implementation results in codex-codex-claude-flow-dev mode. Use when Review Codex needs to validate design alignment, file scope, test evidence, and decide whether to accept, request fixes, or downgrade.
+description: Reviews Implementation Codex implementation results in Codex-native claude-flow mode. Use when Review Codex needs to validate design alignment, file scope, test evidence, and decide whether to accept, request fixes, or downgrade.
 ---
 
 # Codex Review — Review Codex 审查技能
 
 ## 概述
 
-在 `codex-codex-claude-flow-dev` 模式下，本技能用于 Review Codex 对 Implementation Codex 的结果进行治理性审查。
+在 Codex-native claude-flow 模式下，本技能用于 Review Codex 对 Implementation Codex 的结果进行治理性审查。
 重点不是“帮忙写一点代码”，而是判断：
 - 实现是否符合 design / spec / tasks
 - 是否超出文件白名单

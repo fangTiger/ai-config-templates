@@ -59,6 +59,14 @@ def read_project_manifest(project):
     return json.loads((project / ".claude" / ".harness-manifest.json").read_text(encoding="utf-8"))
 
 
+def embedded_python_from_shell_tool(path):
+    text = path.read_text(encoding="utf-8")
+    marker = "<<'PY'\n"
+    start = text.index(marker) + len(marker)
+    end = text.rindex("\nPY")
+    return text[start:end]
+
+
 class V2CodexProfileTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -127,17 +135,110 @@ class V2CodexProfileTests(unittest.TestCase):
         self.assertTrue((project / ".codex" / "session-state.template.md").is_file())
         self.assertEqual(read_project_manifest(project)["mode"], "codex-codex-claude-flow-gpt55-dev")
 
+    def test_shared_graphify_java_tool_embedded_python_is_valid(self):
+        tool = (
+            REPO_ROOT
+            / "v2"
+            / "scripts"
+            / "plugin-profiles"
+            / "shared"
+            / "codex"
+            / "java"
+            / "tools"
+            / "graphify-java-project.sh"
+        )
+
+        compile(embedded_python_from_shell_tool(tool), str(tool), "exec")
+
+    def test_v2_setup_installs_shared_codex_assets_before_profile_overrides(self):
+        shared_codex = REPO_ROOT / "v2" / "scripts" / "plugin-profiles" / "shared" / "codex"
+        shared_graphify_tool = shared_codex / "java" / "tools" / "graphify-java-project.sh"
+        shared_runtime_summary = shared_codex / "tools" / "runtime-verification-summary.sh"
+        shared_graphify_hook = shared_codex / "hooks" / "graphify-query-hook.sh"
+        shared_orchestrate_skill = shared_codex / "skills" / "codex-orchestrate" / "SKILL.md"
+
+        self.assertTrue(shared_graphify_tool.is_file())
+        self.assertTrue(shared_runtime_summary.is_file())
+        self.assertTrue(shared_graphify_hook.is_file())
+        self.assertTrue(shared_orchestrate_skill.is_file())
+
+        project = make_v2_project(self.tmp_path, self.env, mode="codex-codex-claude-flow-gpt55-dev")
+
+        installed_graphify_tool = project / ".codex" / "tools" / "graphify-java-project.sh"
+        installed_orchestrate_skill = project / ".codex" / "skills" / "codex-orchestrate" / "SKILL.md"
+        self.assertEqual(
+            shared_graphify_tool.read_text(encoding="utf-8"),
+            installed_graphify_tool.read_text(encoding="utf-8"),
+        )
+        self.assertEqual(
+            shared_orchestrate_skill.read_text(encoding="utf-8"),
+            installed_orchestrate_skill.read_text(encoding="utf-8"),
+        )
+        compile(embedded_python_from_shell_tool(installed_graphify_tool), str(installed_graphify_tool), "exec")
+
+    def test_v2_switch_installs_shared_codex_assets_before_profile_overrides(self):
+        shared_codex = REPO_ROOT / "v2" / "scripts" / "plugin-profiles" / "shared" / "codex"
+        shared_graphify_tool = shared_codex / "java" / "tools" / "graphify-java-project.sh"
+        shared_orchestrate_skill = shared_codex / "skills" / "codex-orchestrate" / "SKILL.md"
+        project = make_v2_project(self.tmp_path, self.env)
+
+        result = run_cmd(
+            [str(REPO_ROOT / "v2" / "scripts" / "switch-plugin.sh"), "codex-codex-claude-flow-gpt55-dev"],
+            cwd=project,
+            env=self.env,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(
+            shared_graphify_tool.read_text(encoding="utf-8"),
+            (project / ".codex" / "tools" / "graphify-java-project.sh").read_text(encoding="utf-8"),
+        )
+        self.assertEqual(
+            shared_orchestrate_skill.read_text(encoding="utf-8"),
+            (project / ".codex" / "skills" / "codex-orchestrate" / "SKILL.md").read_text(encoding="utf-8"),
+        )
+
     def test_v2_setup_installs_python_codex_native_profile(self):
         project = make_v2_project(self.tmp_path, self.env, mode="codex-codex-python-dev")
 
         self.assertTrue((project / ".codex" / "tools" / "detect-python-project.sh").is_file())
         self.assertTrue((project / ".codex" / "tools" / "verify-python-project.sh").is_file())
         self.assertTrue((project / ".codex" / "tools" / "graphify-python-project.sh").is_file())
+        self.assertTrue((project / ".codex" / "tools" / "runtime-verification-summary.sh").is_file())
+        self.assertFalse((project / ".codex" / "tools" / "graphify-java-project.sh").exists())
         self.assertTrue((project / ".codex" / "skills" / "codex-python-bootstrap" / "SKILL.md").is_file())
         self.assertTrue((project / ".codex" / "skills" / "codex-python-project" / "SKILL.md").is_file())
         self.assertTrue((project / ".codex" / "skills" / "codex-python-testing" / "SKILL.md").is_file())
         self.assertTrue((project / ".codex" / "skills" / "codex-python-security" / "SKILL.md").is_file())
         self.assertEqual(read_project_manifest(project)["mode"], "codex-codex-python-dev")
+
+    def test_v2_switch_installs_python_profile_without_java_tool(self):
+        project = make_v2_project(self.tmp_path, self.env)
+
+        result = run_cmd(
+            [str(REPO_ROOT / "v2" / "scripts" / "switch-plugin.sh"), "codex-codex-python-dev"],
+            cwd=project,
+            env=self.env,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue((project / ".codex" / "tools" / "runtime-verification-summary.sh").is_file())
+        self.assertTrue((project / ".codex" / "tools" / "graphify-python-project.sh").is_file())
+        self.assertFalse((project / ".codex" / "tools" / "graphify-java-project.sh").exists())
+
+    def test_python_profile_does_not_shadow_shared_codex_skill_activation_hooks(self):
+        python_hooks = (
+            REPO_ROOT
+            / "v2"
+            / "scripts"
+            / "plugin-profiles"
+            / "codex-codex-python-dev"
+            / ".codex"
+            / "hooks"
+        )
+
+        self.assertFalse((python_hooks / "skill-activation-prompt.sh").exists())
+        self.assertFalse((python_hooks / "skill-activation-prompt.cjs").exists())
 
     def test_v2_switch_preserves_session_state_by_default_and_resets_on_request(self):
         project = make_v2_project(self.tmp_path, self.env, mode="codex-codex-claude-flow-gpt55-dev")

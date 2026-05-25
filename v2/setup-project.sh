@@ -34,6 +34,7 @@ TEMPLATE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 V1_TEMPLATE_DIR="$TEMPLATE_DIR"
 PROFILES_DIR="$SCRIPT_DIR/scripts/plugin-profiles"
 SHARED_DIR="$PROFILES_DIR/shared"
+SHARED_CODEX_DIR="$SHARED_DIR/codex"
 GLOBAL_MANIFEST="$HOME/.claude/.harness-manifest.json"
 TARGET_DIR="${1:-.}"
 MIGRATE_MODE=false
@@ -313,6 +314,13 @@ if is_codex_native_profile "$PROFILE_DIR"; then
     copy_tree_contents "$SHARED_DIR/hooks" "$CODEX_DIR/hooks"
     copy_tree_contents "$SHARED_DIR/commands" "$CODEX_DIR/commands"
     copy_tree_contents "$SHARED_DIR/skills" "$CODEX_DIR/skills"
+    copy_tree_contents "$SHARED_CODEX_DIR/hooks" "$CODEX_DIR/hooks"
+    copy_tree_contents "$SHARED_CODEX_DIR/commands" "$CODEX_DIR/commands"
+    copy_tree_contents "$SHARED_CODEX_DIR/skills" "$CODEX_DIR/skills"
+    copy_tree_contents "$SHARED_CODEX_DIR/tools" "$CODEX_DIR/tools"
+    if [[ "$DEFAULT_MODE" != "codex-codex-python-dev" ]]; then
+        copy_tree_contents "$SHARED_CODEX_DIR/java/tools" "$CODEX_DIR/tools"
+    fi
     copy_tree_contents "$PROFILE_DIR/skills" "$CODEX_DIR/skills"
     copy_tree_contents "$PROFILE_DIR/.codex" "$CODEX_DIR"
     install_codex_session_state
