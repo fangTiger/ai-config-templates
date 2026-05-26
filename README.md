@@ -25,7 +25,8 @@ cd ~/aicoding/ai-config-templates
 # 2. 初始化全局配置（会安装 ~/.claude/CLAUDE.md 与 ~/.codex/AGENTS.md）
 ./v2/setup-global.sh
 
-# 3. 在目标项目安装项目级配置
+# 3. 在目标项目安装项目级配置（文档下方【Profile 切换】后续还会新增各种模型组合模式，待接入，如 dp-v4pro、glm，如果我充钱的话）
+# claude 设计模式，如使用 codex 则需要切换下面命令
 cd /path/to/your-project
 ~/aicoding/ai-config-templates/v2/setup-project.sh
 
