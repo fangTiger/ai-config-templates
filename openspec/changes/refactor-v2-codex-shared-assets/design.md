@@ -15,8 +15,8 @@ V2 separates global invariants from profile-specific project assets. Codex-nativ
 ## Decisions
 - Decision: add `v2/scripts/plugin-profiles/shared/codex/` instead of reusing existing `shared/hooks` or `shared/skills`.
   - Rationale: existing shared assets are also copied into `.claude/`, while these assets are Codex-native and use `.codex/` runtime paths.
-- Decision: keep language-specific Codex tools under a sublayer such as `shared/codex/java/tools`.
-  - Rationale: `runtime-verification-summary.sh` is common to all Codex-native profiles, while `graphify-java-project.sh` applies only to Java-oriented Codex profiles and must not be installed into `codex-codex-python-dev`.
+- Decision: keep shared runtime tools in the common layer and install Java graphify tooling for the maintained Codex-native profiles.
+  - Rationale: `runtime-verification-summary.sh` is common to all Codex-native profiles; the removed Python-first profile is no longer part of the V2 profile set.
 - Decision: copy `shared/codex` before profile `.codex` assets.
   - Rationale: profile-specific files can still override shared defaults.
 - Decision: remove duplicate profile copies for files now owned by `shared/codex`.

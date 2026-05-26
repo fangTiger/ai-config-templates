@@ -167,6 +167,8 @@ profile_hash_source() {
         echo "$PROJECT_DIR/CLAUDE.md"
     elif [[ -f "$profile_dir/AGENTS.md" ]]; then
         echo "$PROJECT_DIR/AGENTS.md"
+    elif [[ -f "$PROJECT_DIR/AGENTS.md" && ( "$profile" == codex-codex-* || ! -f "$PROJECT_DIR/CLAUDE.md" ) ]]; then
+        echo "$PROJECT_DIR/AGENTS.md"
     else
         echo "$PROJECT_DIR/CLAUDE.md"
     fi
@@ -270,6 +272,11 @@ with open('$file', 'w') as f:
 # 计算文件 hash
 file_hash() {
     local file=$1
+    [[ -f "$file" ]] || {
+        echo "unknown"
+        return
+    }
+
     if command -v shasum &>/dev/null; then
         shasum -a 256 "$file" 2>/dev/null | cut -d' ' -f1 | head -c 12
     elif command -v sha256sum &>/dev/null; then
@@ -549,9 +556,7 @@ switch_profile() {
             copy_tree_contents "$SHARED_CODEX_DIR/commands" "$CODEX_DIR/commands"
             copy_tree_contents "$SHARED_CODEX_DIR/skills" "$CODEX_DIR/skills"
             copy_tree_contents "$SHARED_CODEX_DIR/tools" "$CODEX_DIR/tools"
-            if [[ "$target" != "codex-codex-python-dev" ]]; then
-                copy_tree_contents "$SHARED_CODEX_DIR/java/tools" "$CODEX_DIR/tools"
-            fi
+            copy_tree_contents "$SHARED_CODEX_DIR/java/tools" "$CODEX_DIR/tools"
             copy_tree_contents "$profile_dir/skills" "$CODEX_DIR/skills"
             copy_tree_contents "$profile_dir/.codex" "$CODEX_DIR"
             copy_session_state "$target"

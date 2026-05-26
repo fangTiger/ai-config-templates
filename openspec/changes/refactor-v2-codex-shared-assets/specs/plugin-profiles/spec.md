@@ -7,7 +7,7 @@ The system SHALL provide V2 first-class support for Codex-native `codex-codex-*`
 #### Scenario: List Codex-native V2 profiles
 - **GIVEN** the user is in a V2-capable project
 - **WHEN** the user runs `v2/scripts/switch-plugin.sh --list`
-- **THEN** the output includes `codex-codex-dev`, `codex-codex-claude-flow-dev`, `codex-codex-claude-flow-gpt55-dev`, and `codex-codex-python-dev`
+- **THEN** the output includes `codex-codex-dev`, `codex-codex-claude-flow-dev`, and `codex-codex-claude-flow-gpt55-dev`
 - **AND** the output distinguishes them as installable V2 profiles
 
 #### Scenario: Install GPT-5.5 Codex-native profile through V2 setup
@@ -22,10 +22,8 @@ The system SHALL provide V2 first-class support for Codex-native `codex-codex-*`
 - **AND** `.codex/session-state.md` and `.codex/session-state.template.md` are installed
 - **AND** the project V2 manifest records `mode` as `codex-codex-claude-flow-gpt55-dev`
 
-#### Scenario: Install Python Codex-native profile through V2 setup
+#### Scenario: Shared Codex runtime assets stay profile-independent
 - **GIVEN** V2 global configuration is installed
-- **WHEN** the user runs `v2/setup-project.sh --mode=codex-codex-python-dev`
-- **THEN** `.codex/tools/detect-python-project.sh`, `.codex/tools/verify-python-project.sh`, and `.codex/tools/graphify-python-project.sh` are installed
-- **AND** `.codex/tools/runtime-verification-summary.sh` is installed from the shared Codex asset layer
-- **AND** `.codex/skills/codex-python-bootstrap/SKILL.md`, `.codex/skills/codex-python-project/SKILL.md`, `.codex/skills/codex-python-testing/SKILL.md`, and `.codex/skills/codex-python-security/SKILL.md` are installed
-- **AND** the project V2 manifest records `mode` as `codex-codex-python-dev`
+- **WHEN** the user installs any maintained Codex-native V2 profile
+- **THEN** `.codex/tools/runtime-verification-summary.sh` is installed from the shared Codex asset layer
+- **AND** common Codex workflow skills are installed from the shared Codex asset layer unless overridden by the target profile

@@ -8,7 +8,7 @@
 
 ## 0. 定位
 
-`codex-codex-claude-flow-gpt55-dev` 保留旧 `codex-dev/CLAUDE.md` 的核心体验：架构者先想清楚，再把实现交给执行者，最后由独立 Codex 审查和证据验证收口。
+`codex-codex-claude-flow-gpt55-dev` ：架构者先想清楚，再把实现交给执行者，最后由独立 Codex 审查和证据验证收口。
 
 本 profile 的模型路由是模板级运行时约定，不作为 Codex 平台通用规则：
 
@@ -32,13 +32,10 @@
 
 ## 1. 宪章
 
-1. **规范先行**：非平凡变更必须先判断是否需要 OpenSpec；需要时先有 proposal、spec delta、tasks，并通过 strict validate。
-2. **测试先行**：实现默认遵循 TDD RED-GREEN-REFACTOR；无法 RED 时必须说明原因并提供等价验证。
-3. **安全优先**：认证、授权、数据访问、密钥、权限、部署和外部调用变更必须进入高风险 review。
-4. **证据先于断言**：完成声明必须基于 fresh verification evidence。
-5. **specs/ 是唯一真相**：已实现能力最终必须同步到 `openspec/specs/`。
-6. **实现者委托**：中 / 大任务默认通过结构化 handoff 交给一个或多个 Implementation Codex；Architecture Codex 不直接吞掉整批实现。
-7. **审查独立**：进入 HANDOFF、中 / 大、高风险或 Implementation Codex 实现的任务默认进入 Review Codex gate。
+本 profile 继承全局 OpenSpec、TDD、安全、证据和当前规范源规则，只保留 claude-flow 增量：
+
+1. **实现者委托**：中 / 大任务默认通过结构化 handoff 交给一个或多个 Implementation Codex；Architecture Codex 不直接吞掉整批实现。
+2. **审查独立**：进入 HANDOFF、中 / 大、高风险或 Implementation Codex 实现的任务默认进入 Review Codex gate。
 
 ---
 
@@ -63,15 +60,11 @@
 
 ## 3. Graphify 工作流（强制）
 
-Graphify 是非平凡搜索、架构分析、影响面判断和代码修改前的强制上下文 gate。强制的是“必须先查询或记录降级依据”，不是要求 graphify CLI 永远成功。
+Graphify 规则继承全局配置。本 profile 只增加 claude-flow 交接与审查证据要求：
 
-- 适用范围：架构理解、依赖关系、影响面、跨模块修改、非平凡代码搜索和任何代码修改；纯文案、小配置或无代码任务可记录不适用理由。
-- 如果存在 `graphify-out/graph.json`，Analyze 阶段必须先查询结构：`graphify query "<module/file> architecture dependencies"`。
-- 修改代码前，必须查询影响范围：`graphify query "<module/file> impact callers tests dependencies"`。
-- 如果 graphify CLI / MCP 不可用、图谱过期或没有匹配结果，必须读取 `graphify-out/GRAPH_REPORT.md` 后再继续。
-- 如果项目没有 `graphify-out/` 或报告也不可用，必须在计划、handoff、review 或最终回复中记录 `Graphify: unavailable` 及原因，再使用源码、测试和 `rg` 分析。
-- Handoff Task Package、Review Input 和最终交付必须包含 Graphify context 或降级依据。
-- 不得跳过 Graphify Gate，也不得把 graphify 结果当作唯一依据。
+- Clarify Gate、Handoff Task Package、Review Input 和最终交付必须包含 Graphify context 或降级依据。
+- Graphify 缺失不得阻断任务，但必须记录不可用原因。
+- Implementation Codex 不得把缺失的 Graphify context 当作扩大范围的理由。
 
 ---
 
