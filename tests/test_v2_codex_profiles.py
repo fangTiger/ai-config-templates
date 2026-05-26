@@ -1,4 +1,5 @@
 import json
+import hashlib
 import os
 import subprocess
 import tempfile
@@ -73,12 +74,27 @@ def read_project_manifest(project):
     return json.loads((project / ".claude" / ".harness-manifest.json").read_text(encoding="utf-8"))
 
 
+def short_file_hash(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()[:12]
+
+
 def embedded_python_from_shell_tool(path):
     text = path.read_text(encoding="utf-8")
     marker = "<<'PY'\n"
     start = text.index(marker) + len(marker)
     end = text.rindex("\nPY")
     return text[start:end]
+
+
+def profile_agents_text(profile):
+    return (
+        REPO_ROOT
+        / "v2"
+        / "scripts"
+        / "plugin-profiles"
+        / profile
+        / "AGENTS.md"
+    ).read_text(encoding="utf-8")
 
 
 class V2CodexProfileTests(unittest.TestCase):
@@ -124,7 +140,7 @@ class V2CodexProfileTests(unittest.TestCase):
         self.assertIn("codex-codex-dev", result.stdout)
         self.assertIn("codex-codex-claude-flow-dev", result.stdout)
         self.assertIn("codex-codex-claude-flow-gpt55-dev", result.stdout)
-        self.assertIn("codex-codex-python-dev", result.stdout)
+        self.assertNotIn("codex-codex-python-dev", result.stdout)
 
     def test_v2_status_reports_codex_native_profiles(self):
         project = make_v2_project(self.tmp_path, self.env, mode="codex-codex-claude-flow-gpt55-dev")
@@ -138,7 +154,7 @@ class V2CodexProfileTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("当前模式:", result.stdout)
         self.assertIn("codex-codex-claude-flow-gpt55-dev", result.stdout)
-        self.assertIn("codex-codex-python-dev", result.stdout)
+        self.assertNotIn("codex-codex-python-dev", result.stdout)
 
     def test_v2_switch_rejects_unknown_profile(self):
         project = make_v2_project(self.tmp_path, self.env)
@@ -233,21 +249,20 @@ class V2CodexProfileTests(unittest.TestCase):
             (project / ".codex" / "skills" / "codex-orchestrate" / "SKILL.md").read_text(encoding="utf-8"),
         )
 
-    def test_v2_setup_installs_python_codex_native_profile(self):
-        project = make_v2_project(self.tmp_path, self.env, mode="codex-codex-python-dev")
+    def test_v2_setup_rejects_removed_python_codex_native_profile(self):
+        project = self.tmp_path / "python-profile-project"
+        project.mkdir()
 
-        self.assertTrue((project / ".codex" / "tools" / "detect-python-project.sh").is_file())
-        self.assertTrue((project / ".codex" / "tools" / "verify-python-project.sh").is_file())
-        self.assertTrue((project / ".codex" / "tools" / "graphify-python-project.sh").is_file())
-        self.assertTrue((project / ".codex" / "tools" / "runtime-verification-summary.sh").is_file())
-        self.assertFalse((project / ".codex" / "tools" / "graphify-java-project.sh").exists())
-        self.assertTrue((project / ".codex" / "skills" / "codex-python-bootstrap" / "SKILL.md").is_file())
-        self.assertTrue((project / ".codex" / "skills" / "codex-python-project" / "SKILL.md").is_file())
-        self.assertTrue((project / ".codex" / "skills" / "codex-python-testing" / "SKILL.md").is_file())
-        self.assertTrue((project / ".codex" / "skills" / "codex-python-security" / "SKILL.md").is_file())
-        self.assertEqual(read_project_manifest(project)["mode"], "codex-codex-python-dev")
+        result = run_cmd(
+            [str(REPO_ROOT / "v2" / "setup-project.sh"), "--mode=codex-codex-python-dev", str(project)],
+            cwd=REPO_ROOT,
+            env=self.env,
+        )
 
-    def test_v2_switch_installs_python_profile_without_java_tool(self):
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("模式 'codex-codex-python-dev' 不存在", result.stdout)
+
+    def test_v2_switch_rejects_removed_python_codex_native_profile(self):
         project = make_v2_project(self.tmp_path, self.env)
 
         result = run_cmd(
@@ -256,24 +271,77 @@ class V2CodexProfileTests(unittest.TestCase):
             env=self.env,
         )
 
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertTrue((project / ".codex" / "tools" / "runtime-verification-summary.sh").is_file())
-        self.assertTrue((project / ".codex" / "tools" / "graphify-python-project.sh").is_file())
-        self.assertFalse((project / ".codex" / "tools" / "graphify-java-project.sh").exists())
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("未知 profile", result.stdout)
+        self.assertFalse((REPO_ROOT / "v2" / "scripts" / "plugin-profiles" / "codex-codex-python-dev").exists())
 
-    def test_python_profile_does_not_shadow_shared_codex_skill_activation_hooks(self):
-        python_hooks = (
-            REPO_ROOT
-            / "v2"
-            / "scripts"
-            / "plugin-profiles"
-            / "codex-codex-python-dev"
-            / ".codex"
-            / "hooks"
+    def test_v2_switch_allows_legacy_removed_python_manifest_to_supported_profile(self):
+        project = make_v2_project(self.tmp_path, self.env, mode="codex-codex-claude-flow-gpt55-dev")
+        manifest_path = project / ".claude" / ".harness-manifest.json"
+        manifest = read_project_manifest(project)
+        manifest["mode"] = "codex-codex-python-dev"
+        manifest["templateHash"] = short_file_hash(project / "AGENTS.md")
+        manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+
+        result = run_cmd(
+            [str(REPO_ROOT / "v2" / "scripts" / "switch-plugin.sh"), "codex-codex-dev"],
+            cwd=project,
+            env=self.env,
         )
 
-        self.assertFalse((python_hooks / "skill-activation-prompt.sh").exists())
-        self.assertFalse((python_hooks / "skill-activation-prompt.cjs").exists())
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn("覆盖本地修改", result.stdout)
+        self.assertIn("V2 切换完成", result.stdout)
+        self.assertEqual(read_project_manifest(project)["mode"], "codex-codex-dev")
+
+    def test_claude_flow_agents_keep_only_profile_specific_charter(self):
+        duplicated_global_rules = [
+            "规范先行",
+            "测试先行",
+            "安全优先",
+            "证据先于断言",
+            "specs/ 是唯一真相",
+        ]
+
+        for profile in ("codex-codex-claude-flow-dev", "codex-codex-claude-flow-gpt55-dev"):
+            with self.subTest(profile=profile):
+                text = profile_agents_text(profile)
+                for rule in duplicated_global_rules:
+                    self.assertNotIn(rule, text)
+                self.assertIn("实现者委托", text)
+                self.assertIn("审查独立", text)
+
+    def test_claude_flow_agents_use_compact_graphify_overlay(self):
+        detailed_global_graphify_phrases = [
+            'graphify query "<module/file> architecture dependencies"',
+            'graphify query "<module/file> impact callers tests dependencies"',
+            "如果 graphify CLI / MCP 不可用",
+            "不得把 graphify 结果当作唯一依据",
+        ]
+
+        for profile in ("codex-codex-claude-flow-dev", "codex-codex-claude-flow-gpt55-dev"):
+            with self.subTest(profile=profile):
+                text = profile_agents_text(profile)
+                for phrase in detailed_global_graphify_phrases:
+                    self.assertNotIn(phrase, text)
+                self.assertIn("Handoff Task Package", text)
+                self.assertIn("Review Input", text)
+                self.assertIn("最终交付", text)
+
+    def test_gpt55_claude_flow_agents_keep_positioning_and_model_routing(self):
+        text = profile_agents_text("codex-codex-claude-flow-gpt55-dev")
+
+        self.assertIn(
+            "`codex-codex-claude-flow-gpt55-dev` ：架构者先想清楚",
+            text,
+        )
+        self.assertIn("Architecture Codex / 最外层主线程", text)
+        self.assertIn("`gpt-5.5` + `xhigh`", text)
+        self.assertIn("Implementation Codex / coding worker", text)
+        self.assertIn(
+            "Review Codex：`.codex/agents/review-codex.toml`，`gpt-5.4` + `xhigh`",
+            text,
+        )
 
     def test_v2_switch_preserves_session_state_by_default_and_resets_on_request(self):
         project = make_v2_project(self.tmp_path, self.env, mode="codex-codex-claude-flow-gpt55-dev")

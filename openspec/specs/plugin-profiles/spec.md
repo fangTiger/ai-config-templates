@@ -124,7 +124,7 @@ The system SHALL provide V2 first-class support for Codex-native `codex-codex-*`
 #### Scenario: List Codex-native V2 profiles
 - **GIVEN** the user is in a V2-capable project
 - **WHEN** the user runs `v2/scripts/switch-plugin.sh --list`
-- **THEN** the output includes `codex-codex-dev`, `codex-codex-claude-flow-dev`, `codex-codex-claude-flow-gpt55-dev`, and `codex-codex-python-dev`
+- **THEN** the output includes `codex-codex-dev`, `codex-codex-claude-flow-dev`, and `codex-codex-claude-flow-gpt55-dev`
 - **AND** the output distinguishes them as installable V2 profiles
 
 #### Scenario: Install GPT-5.5 Codex-native profile through V2 setup
@@ -138,12 +138,11 @@ The system SHALL provide V2 first-class support for Codex-native `codex-codex-*`
 - **AND** `.codex/session-state.md` and `.codex/session-state.template.md` are installed
 - **AND** the project V2 manifest records `mode` as `codex-codex-claude-flow-gpt55-dev`
 
-#### Scenario: Install Python Codex-native profile through V2 setup
+#### Scenario: Reject removed Python Codex-native profile through V2 setup
 - **GIVEN** V2 global configuration is installed
 - **WHEN** the user runs `v2/setup-project.sh --mode=codex-codex-python-dev`
-- **THEN** `.codex/tools/detect-python-project.sh`, `.codex/tools/verify-python-project.sh`, and `.codex/tools/graphify-python-project.sh` are installed
-- **AND** `.codex/skills/codex-python-bootstrap/SKILL.md`, `.codex/skills/codex-python-project/SKILL.md`, `.codex/skills/codex-python-testing/SKILL.md`, and `.codex/skills/codex-python-security/SKILL.md` are installed
-- **AND** the project V2 manifest records `mode` as `codex-codex-python-dev`
+- **THEN** the setup exits with a non-zero status
+- **AND** the output reports the mode does not exist
 
 ### Requirement: V2 Codex-Native Profile Switching
 
@@ -156,6 +155,20 @@ The V2 switcher SHALL switch between Claude-oriented profiles and Codex-native p
 - **AND** installs the target profile root `AGENTS.md` and `.codex/` assets
 - **AND** updates the project manifest `mode` to `codex-codex-claude-flow-gpt55-dev`
 - **AND** reports the active profile as `codex-codex-claude-flow-gpt55-dev`
+
+#### Scenario: Switch away from removed Python Codex-native profile
+- **GIVEN** a project has a V2 project manifest with `mode` set to `codex-codex-python-dev` from an older install
+- **AND** the project still has a root `AGENTS.md`
+- **WHEN** the user runs `v2/scripts/switch-plugin.sh codex-codex-dev`
+- **THEN** the switcher uses the existing `AGENTS.md` for drift detection
+- **AND** the switch does not require an overwrite confirmation caused by the missing removed profile template
+- **AND** the project manifest `mode` is updated to `codex-codex-dev`
+
+#### Scenario: Reject removed Python Codex-native profile as switch target
+- **GIVEN** a project has a V2 project manifest
+- **WHEN** the user runs `v2/scripts/switch-plugin.sh codex-codex-python-dev`
+- **THEN** the switcher exits with a non-zero status
+- **AND** the output reports an unknown profile
 
 #### Scenario: Switch from Codex-native profile back to superpowers
 - **GIVEN** a project has a V2 project manifest with `mode` set to `codex-codex-claude-flow-gpt55-dev`
@@ -185,4 +198,3 @@ The repository documentation SHALL present V2 as the recommended path for Codex-
 - **WHEN** they look for Codex-specific setup
 - **THEN** the recommended command uses `v2/setup-project.sh --mode=codex-codex-claude-flow-gpt55-dev`
 - **AND** the README identifies V1 `scripts/switch-plugin_codex.sh` as a compatibility path
-

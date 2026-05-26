@@ -7,7 +7,7 @@
 - **V2 分层配置**：全局不变量 + 项目模式差异，推荐优先使用
 - **V1 兼容配置**：保留旧版 `setup-global.sh` 和 `setup-claude-config.sh`
 - **插件模式切换**：Superpowers / ECC / OMC / Teams / codex-dev 等
-- **Codex 专用模式**：`codex-codex-dev`、`codex-codex-python-dev`、claude-flow 系列 profile
+- **Codex 专用模式**：`codex-codex-dev` 与 claude-flow 系列 profile
 - **OpenSpec 工作流**：proposal / apply / archive 命令与规范骨架
 - **Graphify 增强**：Claude/Codex hooks、`.graphifyignore`、知识图谱降级策略
 - **MCP / OpenCode 模板**：Codex、Gemini、OpenCode 项目配置
@@ -31,9 +31,6 @@ cd /path/to/your-project
 
 # Codex 主用推荐：安装完整 Codex-native GPT-5.5 profile
 ~/aicoding/ai-config-templates/v2/setup-project.sh --mode=codex-codex-claude-flow-gpt55-dev
-
-# Python 项目推荐：安装 Python-first Codex-native profile
-~/aicoding/ai-config-templates/v2/setup-project.sh --mode=codex-codex-python-dev
 
 # 4. 可选：安装 graphify 并首次建图
 pip install graphifyy
@@ -113,9 +110,6 @@ Codex 专用 profile：
 # V2 推荐：Codex 主工作台（完整 agents/hooks/tools/session-state）
 ~/aicoding/ai-config-templates/v2/scripts/switch-plugin.sh codex-codex-claude-flow-gpt55-dev
 
-# V2 推荐：Python-first Codex 主工作台
-~/aicoding/ai-config-templates/v2/scripts/switch-plugin.sh codex-codex-python-dev
-
 # V1 兼容路径：仅在旧项目或尚未迁移 V2 时使用
 # 测试验证版，可忽略
 ~/aicoding/ai-config-templates/scripts/switch-plugin_codex.sh codex-codex-dev
@@ -123,8 +117,6 @@ Codex 专用 profile：
 ~/aicoding/ai-config-templates/scripts/switch-plugin_codex.sh codex-codex-claude-flow-dev
 # 主 agent 5.5-xhigh woker、review-5.4-xhigh
 ~/aicoding/ai-config-templates/scripts/switch-plugin_codex.sh codex-codex-claude-flow-gpt55-dev
-# 测试验证python版，可忽略
-~/aicoding/ai-config-templates/scripts/switch-plugin_codex.sh codex-codex-python-dev
 ```
 
 切换后重启对应 AI CLI 会话，让新的项目级配置生效。
@@ -165,11 +157,7 @@ graphify install
 /graphify .
 ```
 
-脚手架会把 Graphify hook 安装到 Claude/Codex 侧：
-
-- 搜索前优先做结构查询：`graphify query "<module/file> architecture dependencies"`
-- 改代码前优先做影响检查：`graphify query "<module/file> impact callers tests dependencies"`
-- 如果 `graphify` CLI 不可用，会降级读取 `graphify-out/GRAPH_REPORT.md` 或继续原流程
+脚手架会把 Graphify hook 安装到 Claude/Codex 侧；图谱可用时优先提供结构和影响面上下文，不可用时记录降级原因并继续原流程。
 
 更多维护细节见 `docs/graphify-integration.md`。
 
