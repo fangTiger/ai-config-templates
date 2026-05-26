@@ -328,6 +328,42 @@ class V2CodexProfileTests(unittest.TestCase):
                 self.assertIn("Review Input", text)
                 self.assertIn("最终交付", text)
 
+    def test_claude_flow_agents_use_compact_pipeline_and_delivery_overlay(self):
+        repeated_pipeline_sections = [
+            "### Stage 1: ANALYZE",
+            "### Stage 2: DESIGN",
+            "### Stage 3: HANDOFF",
+            "### Stage 4: IMPLEMENT",
+            "### Stage 5: REVIEW",
+            "### Stage 6: VERIFY + ARCHIVE",
+        ]
+        repeated_delivery_phrases = [
+            "最终回复必须包含",
+            "读取过的关键依据",
+            "修改过的文件",
+            "运行过的验证命令与结果",
+        ]
+
+        for profile in ("codex-codex-claude-flow-dev", "codex-codex-claude-flow-gpt55-dev"):
+            with self.subTest(profile=profile):
+                text = profile_agents_text(profile)
+                self.assertIn("| Stage | Owner | Output / Gate |", text)
+                for stage in ("ANALYZE", "DESIGN", "HANDOFF", "IMPLEMENT", "REVIEW", "VERIFY"):
+                    self.assertIn(stage, text)
+                self.assertIn("Handoff Task Package", text)
+                self.assertIn("PASS", text)
+                self.assertIn("FIX_REQUIRED", text)
+                self.assertIn("DOWNGRADE", text)
+                self.assertIn("继承全局交付清单", text)
+                self.assertIn("Review Decision", text)
+                for phrase in repeated_pipeline_sections + repeated_delivery_phrases:
+                    self.assertNotIn(phrase, text)
+
+        self.assertIn(
+            "PostToolUse tracker",
+            profile_agents_text("codex-codex-claude-flow-gpt55-dev"),
+        )
+
     def test_gpt55_claude_flow_agents_keep_positioning_and_model_routing(self):
         text = profile_agents_text("codex-codex-claude-flow-gpt55-dev")
 
