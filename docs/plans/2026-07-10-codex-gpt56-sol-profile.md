@@ -78,9 +78,16 @@ def test_v2_setup_installs_gpt56_sol_model_routing(self):
 
 再增加：
 
-- 从 GPT-5.5 profile 切到 GPT-5.6 Sol 后，manifest 更新且旧 Mode session-state 被重建。
+- 将上述三份 TOML 的 model/provider/effort/sandbox 断言提取为测试类方法 `assert_gpt56_routing(self, codex_dir)`，setup 与 switch 测试都必须通过 `self.assert_gpt56_routing(...)` 调用。
+- 从 GPT-5.5 profile 切到 GPT-5.6 Sol 后，manifest 更新、旧 Mode session-state 被重建，并对切换后实际落盘的 `.codex` 再次调用 `assert_gpt56_routing`。
 - 使用 `git check-ignore --no-index` 断言目标 V2 `.codex/config.toml` 不再被忽略。
 - 解析旧 GPT-5.5 profile，断言主模型仍是 5.5、worker/review 仍是 5.4。
+
+切换测试中的落盘路由检查必须明确出现：
+
+```python
+self.assert_gpt56_routing(project / ".codex")
+```
 
 **Step 3: 运行 RED 测试**
 
@@ -199,7 +206,7 @@ Run:
 
 ```bash
 git status --short
-git check-ignore -v --no-index v2/scripts/plugin-profiles/codex-codex-claude-flow-gpt56-sol-dev/.codex/config.toml
+git check-ignore -q --no-index v2/scripts/plugin-profiles/codex-codex-claude-flow-gpt56-sol-dev/.codex/config.toml
 ```
 
 Expected: 新 `.codex` 文件出现在 status；`git check-ignore` 返回非零且不输出匹配规则。
@@ -262,9 +269,20 @@ class V1CodexProfileTests(unittest.TestCase):
         with (self.project / ".codex" / "agents" / "review-codex.toml").open("rb") as handle:
             review = tomllib.load(handle)
 
-        self.assertEqual((config["model"], config["model_reasoning_effort"]), ("gpt-5.6-sol", "xhigh"))
-        self.assertEqual((worker["model"], worker["model_reasoning_effort"]), ("gpt-5.5", "xhigh"))
-        self.assertEqual((review["model"], review["model_reasoning_effort"]), ("gpt-5.5", "xhigh"))
+        self.assertEqual(
+            (config["model"], config["model_provider"], config["model_reasoning_effort"]),
+            ("gpt-5.6-sol", "openai", "xhigh"),
+        )
+        self.assertEqual(
+            (worker["model"], worker["model_provider"], worker["model_reasoning_effort"]),
+            ("gpt-5.5", "openai", "xhigh"),
+        )
+        self.assertEqual(worker["sandbox_mode"], "workspace-write")
+        self.assertEqual(
+            (review["model"], review["model_provider"], review["model_reasoning_effort"]),
+            ("gpt-5.5", "openai", "xhigh"),
+        )
+        self.assertEqual(review["sandbox_mode"], "read-only")
         self.assertEqual(
             (self.project / ".claude" / ".active-plugin").read_text(encoding="utf-8").strip(),
             PROFILE,
@@ -342,6 +360,8 @@ git commit -m "feat(profiles): add GPT-5.6 Sol V1 compatibility"
 v2/setup-project.sh --mode=codex-codex-claude-flow-gpt56-sol-dev
 v2/scripts/switch-plugin.sh codex-codex-claude-flow-gpt56-sol-dev
 scripts/switch-plugin_codex.sh codex-codex-claude-flow-gpt56-sol-dev
+v2/setup-project.sh --mode=codex-codex-claude-flow-gpt55-dev
+Codex 主用推荐
 ```
 
 **Step 2: 运行 RED**
@@ -411,7 +431,12 @@ Expected: 全部 PASS。
 Run:
 
 ```bash
-bash -n scripts/switch-plugin_codex.sh v2/setup-project.sh v2/scripts/switch-plugin.sh
+bash -n scripts/switch-plugin_codex.sh
+bash -n v2/setup-project.sh
+bash -n v2/scripts/switch-plugin.sh
+python3 -m json.tool scripts/plugin-profiles/codex-codex-claude-flow-gpt56-sol-dev/settings.json
+python3 -m json.tool scripts/plugin-profiles/codex-codex-claude-flow-gpt56-sol-dev/.codex/hooks.json
+python3 -m json.tool scripts/plugin-profiles/codex-codex-claude-flow-gpt56-sol-dev/.codex/skills/skill-rules.json
 python3 -m json.tool v2/scripts/plugin-profiles/codex-codex-claude-flow-gpt56-sol-dev/settings.json
 python3 -m json.tool v2/scripts/plugin-profiles/codex-codex-claude-flow-gpt56-sol-dev/.codex/hooks.json
 python3 -m json.tool v2/scripts/plugin-profiles/codex-codex-claude-flow-gpt56-sol-dev/.codex/skills/skill-rules.json
