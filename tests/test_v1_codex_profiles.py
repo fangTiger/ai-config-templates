@@ -14,7 +14,7 @@ GPT56_SOL_PROFILE = "codex-codex-claude-flow-gpt56-sol-dev"
 
 def run_switcher(args, cwd, env):
     return subprocess.run(
-        ["bash", str(SWITCHER), *args],
+        [str(SWITCHER), *args],
         cwd=cwd,
         env=env,
         text=True,
@@ -69,6 +69,9 @@ class V1CodexProfileTests(unittest.TestCase):
             (delegated_model, "openai", "xhigh"),
         )
         self.assertEqual(review["sandbox_mode"], "read-only")
+
+    def test_v1_switcher_is_executable(self):
+        self.assertTrue(os.access(SWITCHER, os.X_OK))
 
     def test_v1_help_lists_gpt56_sol_profile(self):
         result = run_switcher(["--help"], self.project, self.env)
