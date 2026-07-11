@@ -517,6 +517,28 @@ class V2CodexProfileTests(unittest.TestCase):
             text,
         )
 
+    def test_readme_documents_gpt56_sol_setup_and_switch_commands(self):
+        text = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+
+        self.assertIn(
+            "v2/setup-project.sh --mode=codex-codex-claude-flow-gpt56-sol-dev",
+            text,
+        )
+        self.assertIn(
+            "v2/scripts/switch-plugin.sh codex-codex-claude-flow-gpt56-sol-dev",
+            text,
+        )
+        self.assertIn(
+            "scripts/switch-plugin_codex.sh codex-codex-claude-flow-gpt56-sol-dev",
+            text,
+        )
+        self.assertIn("主 agent 5.6-sol-xhigh", text)
+        self.assertIn("worker、review-5.5-xhigh", text)
+        self.assertIn(
+            "v2/scripts/switch-plugin.sh codex-codex-claude-flow-gpt55-dev",
+            text,
+        )
+
     def test_v2_switch_preserves_session_state_by_default_and_resets_on_request(self):
         project = make_v2_project(self.tmp_path, self.env, mode="codex-codex-claude-flow-gpt55-dev")
         state_file = project / ".codex" / "session-state.md"
