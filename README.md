@@ -30,12 +30,11 @@ cd ~/aicoding/ai-config-templates
 cd /path/to/your-project
 ~/aicoding/ai-config-templates/v2/setup-project.sh
 
-# Codex 主用推荐：安装完整 Codex-native GPT-5.6 Sol profile
-# 主 agent 5.6-sol-xhigh，worker、review-5.5-xhigh
-~/aicoding/ai-config-templates/v2/setup-project.sh --mode=codex-codex-claude-flow-gpt56-sol-dev
-
-# 继续使用原 GPT-5.5 profile 时
+# Codex 主用推荐：安装完整 Codex-native GPT-5.5 profile
 ~/aicoding/ai-config-templates/v2/setup-project.sh --mode=codex-codex-claude-flow-gpt55-dev
+
+# 新增独立 GPT-5.6 Sol profile：主 agent 5.6-sol-xhigh，worker、review-5.5-xhigh
+~/aicoding/ai-config-templates/v2/setup-project.sh --mode=codex-codex-claude-flow-gpt56-sol-dev
 
 # 4. 可选：安装 graphify 并首次建图
 pip install graphifyy
@@ -112,12 +111,11 @@ ai-config-templates/
 Codex 专用 profile：
 
 ```bash
-# V2 推荐：GPT-5.6 Sol Codex 主工作台（完整 agents/hooks/tools/session-state）
-# 主 agent 5.6-sol-xhigh，worker、review-5.5-xhigh
-~/aicoding/ai-config-templates/v2/scripts/switch-plugin.sh codex-codex-claude-flow-gpt56-sol-dev
-
-# V2 原 GPT-5.5 工作台继续保留
+# V2 推荐：Codex 主工作台（完整 agents/hooks/tools/session-state）
 ~/aicoding/ai-config-templates/v2/scripts/switch-plugin.sh codex-codex-claude-flow-gpt55-dev
+
+# V2 独立 GPT-5.6 Sol：主 agent 5.6-sol-xhigh，worker、review-5.5-xhigh
+~/aicoding/ai-config-templates/v2/scripts/switch-plugin.sh codex-codex-claude-flow-gpt56-sol-dev
 
 # V1 兼容路径：仅在旧项目或尚未迁移 V2 时使用
 # 测试验证版，可忽略

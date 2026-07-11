@@ -535,6 +535,14 @@ class V2CodexProfileTests(unittest.TestCase):
         self.assertIn("主 agent 5.6-sol-xhigh", text)
         self.assertIn("worker、review-5.5-xhigh", text)
         self.assertIn(
+            "# Codex 主用推荐：安装完整 Codex-native GPT-5.5 profile",
+            text,
+        )
+        self.assertIn(
+            "# V2 推荐：Codex 主工作台（完整 agents/hooks/tools/session-state）",
+            text,
+        )
+        self.assertIn(
             "v2/scripts/switch-plugin.sh codex-codex-claude-flow-gpt55-dev",
             text,
         )
