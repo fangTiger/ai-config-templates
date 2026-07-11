@@ -11,6 +11,8 @@ Thumbs.db
 .codex
 !scripts/plugin-profiles/*/.codex/
 !scripts/plugin-profiles/*/.codex/**
+!v2/scripts/plugin-profiles/*/.codex/
+!v2/scripts/plugin-profiles/*/.codex/**
 .gemini
 .idea/
 .vscode/

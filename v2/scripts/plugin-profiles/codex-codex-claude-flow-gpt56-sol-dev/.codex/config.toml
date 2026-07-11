@@ -1,0 +1,21 @@
+# 项目级 Codex 配置
+# 运行时入口和完整流程以项目根 AGENTS.md 为主。
+# 使用 V2 switch-plugin.sh 落盘时，对应 profile 目录是持久生成源。
+model = "gpt-5.6-sol"
+model_provider = "openai"
+model_reasoning_effort = "xhigh"
+
+[features]
+# Codex CLI 0.122 uses codex_hooks; current docs keep it as a deprecated alias for hooks.
+codex_hooks = true
+
+[agents]
+max_threads = 6
+max_depth = 1
+
+# 推荐启动命令：
+#   /path/to/ai-config-templates/v2/scripts/switch-plugin.sh codex-codex-claude-flow-gpt56-sol-dev
+# 启动后建议顺序：
+#   1. 读取项目根 AGENTS.md
+#   2. 任务匹配时读取 .codex/skills、.codex/agents/worker-codex.toml 或 .codex/agents/review-codex.toml
+#   3. 再按 AGENTS.md 指向读取 OpenSpec、graphify 或源码上下文

@@ -3,11 +3,14 @@ import hashlib
 import os
 import subprocess
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+GPT55_PROFILE = "codex-codex-claude-flow-gpt55-dev"
+GPT56_SOL_PROFILE = "codex-codex-claude-flow-gpt56-sol-dev"
 
 
 def run_cmd(args, cwd, env):
@@ -74,6 +77,11 @@ def read_project_manifest(project):
     return json.loads((project / ".claude" / ".harness-manifest.json").read_text(encoding="utf-8"))
 
 
+def read_toml(path):
+    with path.open("rb") as handle:
+        return tomllib.load(handle)
+
+
 def short_file_hash(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()[:12]
 
@@ -105,6 +113,26 @@ class V2CodexProfileTests(unittest.TestCase):
 
     def tearDown(self):
         self.tmp.cleanup()
+
+    def assert_gpt56_routing(self, codex_dir):
+        config = read_toml(codex_dir / "config.toml")
+        worker = read_toml(codex_dir / "agents" / "worker-codex.toml")
+        review = read_toml(codex_dir / "agents" / "review-codex.toml")
+
+        self.assertEqual(
+            (config["model"], config["model_provider"], config["model_reasoning_effort"]),
+            ("gpt-5.6-sol", "openai", "xhigh"),
+        )
+        self.assertEqual(
+            (worker["model"], worker["model_provider"], worker["model_reasoning_effort"]),
+            ("gpt-5.5", "openai", "xhigh"),
+        )
+        self.assertEqual(worker["sandbox_mode"], "workspace-write")
+        self.assertEqual(
+            (review["model"], review["model_provider"], review["model_reasoning_effort"]),
+            ("gpt-5.5", "openai", "xhigh"),
+        )
+        self.assertEqual(review["sandbox_mode"], "read-only")
 
     def test_v2_global_setup_installs_codex_global_agents(self):
         install_mock_claude(self.env)
@@ -139,8 +167,21 @@ class V2CodexProfileTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("codex-codex-dev", result.stdout)
         self.assertIn("codex-codex-claude-flow-dev", result.stdout)
-        self.assertIn("codex-codex-claude-flow-gpt55-dev", result.stdout)
+        self.assertIn(GPT55_PROFILE, result.stdout)
         self.assertNotIn("codex-codex-python-dev", result.stdout)
+
+    def test_v2_lists_gpt56_sol_profile(self):
+        project = make_v2_project(self.tmp_path, self.env)
+
+        result = run_cmd(
+            [str(REPO_ROOT / "v2" / "scripts" / "switch-plugin.sh"), "--list"],
+            cwd=project,
+            env=self.env,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn(GPT56_SOL_PROFILE, result.stdout)
+        self.assertIn(GPT55_PROFILE, result.stdout)
 
     def test_v2_status_reports_codex_native_profiles(self):
         project = make_v2_project(self.tmp_path, self.env, mode="codex-codex-claude-flow-gpt55-dev")
@@ -169,7 +210,7 @@ class V2CodexProfileTests(unittest.TestCase):
         self.assertIn("未知 profile", result.stdout)
 
     def test_v2_setup_installs_gpt55_codex_native_profile(self):
-        project = make_v2_project(self.tmp_path, self.env, mode="codex-codex-claude-flow-gpt55-dev")
+        project = make_v2_project(self.tmp_path, self.env, mode=GPT55_PROFILE)
 
         self.assertTrue((project / "AGENTS.md").is_file())
         self.assertTrue((project / ".codex" / "config.toml").is_file())
@@ -184,7 +225,76 @@ class V2CodexProfileTests(unittest.TestCase):
         self.assertTrue((project / ".codex" / "tools" / "graphify-java-project.sh").is_file())
         self.assertTrue((project / ".codex" / "session-state.md").is_file())
         self.assertTrue((project / ".codex" / "session-state.template.md").is_file())
-        self.assertEqual(read_project_manifest(project)["mode"], "codex-codex-claude-flow-gpt55-dev")
+        self.assertEqual(read_project_manifest(project)["mode"], GPT55_PROFILE)
+
+    def test_v2_setup_installs_gpt56_sol_model_routing(self):
+        project = make_v2_project(self.tmp_path, self.env, mode=GPT56_SOL_PROFILE)
+
+        self.assertTrue((project / "AGENTS.md").is_file())
+        self.assertTrue((project / ".codex" / "hooks.json").is_file())
+        self.assertTrue((project / ".codex" / "tools" / "runtime-verification-summary.sh").is_file())
+        self.assertTrue((project / ".codex" / "tools" / "graphify-java-project.sh").is_file())
+        self.assertTrue((project / ".codex" / "skills" / "codex-orchestrate" / "SKILL.md").is_file())
+        self.assert_gpt56_routing(project / ".codex")
+        self.assertEqual(read_project_manifest(project)["mode"], GPT56_SOL_PROFILE)
+
+        state = (project / ".codex" / "session-state.md").read_text(encoding="utf-8")
+        self.assertIn(f"# {GPT56_SOL_PROFILE} Workflow State", state)
+        self.assertIn(f"## Mode: {GPT56_SOL_PROFILE}", state)
+
+    def test_v2_switches_to_gpt56_sol_from_previous_profile(self):
+        project = make_v2_project(self.tmp_path, self.env, mode=GPT55_PROFILE)
+        state_file = project / ".codex" / "session-state.md"
+        state_file.write_text(
+            state_file.read_text(encoding="utf-8") + "\n## CustomNote: gpt55-state\n",
+            encoding="utf-8",
+        )
+
+        result = run_cmd(
+            [str(REPO_ROOT / "v2" / "scripts" / "switch-plugin.sh"), GPT56_SOL_PROFILE],
+            cwd=project,
+            env=self.env,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(read_project_manifest(project)["mode"], GPT56_SOL_PROFILE)
+        self.assert_gpt56_routing(project / ".codex")
+
+        state = state_file.read_text(encoding="utf-8")
+        self.assertNotIn("CustomNote: gpt55-state", state)
+        self.assertIn(f"# {GPT56_SOL_PROFILE} Workflow State", state)
+        self.assertIn(f"## Mode: {GPT56_SOL_PROFILE}", state)
+
+    def test_v2_gpt56_sol_dotfiles_are_not_ignored(self):
+        profile_config = (
+            "v2/scripts/plugin-profiles/"
+            f"{GPT56_SOL_PROFILE}/.codex/config.toml"
+        )
+
+        result = subprocess.run(
+            ["git", "check-ignore", "-q", "--no-index", profile_config],
+            cwd=REPO_ROOT,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 1)
+
+    def test_gpt55_profile_model_routing_remains_unchanged(self):
+        codex_dir = (
+            REPO_ROOT
+            / "v2"
+            / "scripts"
+            / "plugin-profiles"
+            / GPT55_PROFILE
+            / ".codex"
+        )
+        config = read_toml(codex_dir / "config.toml")
+        worker = read_toml(codex_dir / "agents" / "worker-codex.toml")
+        review = read_toml(codex_dir / "agents" / "review-codex.toml")
+
+        self.assertEqual((config["model"], config["model_reasoning_effort"]), ("gpt-5.5", "xhigh"))
+        self.assertEqual((worker["model"], worker["model_reasoning_effort"]), ("gpt-5.4", "xhigh"))
+        self.assertEqual((review["model"], review["model_reasoning_effort"]), ("gpt-5.4", "xhigh"))
 
     def test_shared_graphify_java_tool_embedded_python_is_valid(self):
         tool = (
@@ -303,7 +413,7 @@ class V2CodexProfileTests(unittest.TestCase):
             "specs/ 是唯一真相",
         ]
 
-        for profile in ("codex-codex-claude-flow-dev", "codex-codex-claude-flow-gpt55-dev"):
+        for profile in ("codex-codex-claude-flow-dev", GPT55_PROFILE, GPT56_SOL_PROFILE):
             with self.subTest(profile=profile):
                 text = profile_agents_text(profile)
                 for rule in duplicated_global_rules:
@@ -319,7 +429,7 @@ class V2CodexProfileTests(unittest.TestCase):
             "不得把 graphify 结果当作唯一依据",
         ]
 
-        for profile in ("codex-codex-claude-flow-dev", "codex-codex-claude-flow-gpt55-dev"):
+        for profile in ("codex-codex-claude-flow-dev", GPT55_PROFILE, GPT56_SOL_PROFILE):
             with self.subTest(profile=profile):
                 text = profile_agents_text(profile)
                 for phrase in detailed_global_graphify_phrases:
@@ -344,7 +454,7 @@ class V2CodexProfileTests(unittest.TestCase):
             "运行过的验证命令与结果",
         ]
 
-        for profile in ("codex-codex-claude-flow-dev", "codex-codex-claude-flow-gpt55-dev"):
+        for profile in ("codex-codex-claude-flow-dev", GPT55_PROFILE, GPT56_SOL_PROFILE):
             with self.subTest(profile=profile):
                 text = profile_agents_text(profile)
                 self.assertIn("| Stage | Owner | Output / Gate |", text)
@@ -361,11 +471,11 @@ class V2CodexProfileTests(unittest.TestCase):
 
         self.assertIn(
             "PostToolUse tracker",
-            profile_agents_text("codex-codex-claude-flow-gpt55-dev"),
+            profile_agents_text(GPT55_PROFILE),
         )
 
     def test_gpt55_claude_flow_agents_keep_positioning_and_model_routing(self):
-        text = profile_agents_text("codex-codex-claude-flow-gpt55-dev")
+        text = profile_agents_text(GPT55_PROFILE)
 
         self.assertIn(
             "`codex-codex-claude-flow-gpt55-dev` ：架构者先想清楚",
@@ -376,6 +486,34 @@ class V2CodexProfileTests(unittest.TestCase):
         self.assertIn("Implementation Codex / coding worker", text)
         self.assertIn(
             "Review Codex：`.codex/agents/review-codex.toml`，`gpt-5.4` + `xhigh`",
+            text,
+        )
+
+    def test_gpt56_sol_claude_flow_agents_keep_positioning_and_model_routing(self):
+        agents_file = (
+            REPO_ROOT
+            / "v2"
+            / "scripts"
+            / "plugin-profiles"
+            / GPT56_SOL_PROFILE
+            / "AGENTS.md"
+        )
+        self.assertTrue(agents_file.is_file())
+        text = agents_file.read_text(encoding="utf-8")
+
+        self.assertIn(
+            f"`{GPT56_SOL_PROFILE}` ：架构者先想清楚",
+            text,
+        )
+        self.assertIn("Architecture Codex / 最外层主线程", text)
+        self.assertIn("`gpt-5.6-sol` + `xhigh`", text)
+        self.assertIn(
+            "Implementation Codex / coding worker："
+            "`.codex/agents/worker-codex.toml`，`gpt-5.5` + `xhigh`",
+            text,
+        )
+        self.assertIn(
+            "Review Codex：`.codex/agents/review-codex.toml`，`gpt-5.5` + `xhigh`",
             text,
         )
 
