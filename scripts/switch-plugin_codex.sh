@@ -11,7 +11,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TEMPLATE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 PROFILES_DIR="$SCRIPT_DIR/plugin-profiles"
-SUPPORTED_CODEX_PROFILES=("codex-codex-dev" "codex-codex-python-dev" "codex-codex-claude-flow-dev" "codex-codex-claude-flow-gpt55-dev")
+SUPPORTED_CODEX_PROFILES=("codex-codex-dev" "codex-codex-python-dev" "codex-codex-claude-flow-dev" "codex-codex-claude-flow-gpt55-dev" "codex-codex-claude-flow-gpt56-sol-dev")
 PROFILE_NAME=""
 PROFILE_DIR=""
 SHARED_DIR="$PROFILES_DIR/shared"
@@ -342,7 +342,7 @@ validate_layout() {
     elif [[ "$PROFILE_NAME" == "codex-codex-claude-flow-dev" ]]; then
         [[ -f "$CODEX_DIR/agents/review-codex.toml" ]] || ok=false
         [[ -f "$CODEX_DIR/tools/graphify-java-project.sh" ]] || ok=false
-    elif [[ "$PROFILE_NAME" == "codex-codex-claude-flow-gpt55-dev" ]]; then
+    elif [[ "$PROFILE_NAME" == "codex-codex-claude-flow-gpt55-dev" || "$PROFILE_NAME" == "codex-codex-claude-flow-gpt56-sol-dev" ]]; then
         [[ -f "$CODEX_DIR/agents/worker-codex.toml" ]] || ok=false
         [[ -f "$CODEX_DIR/agents/review-codex.toml" ]] || ok=false
         [[ -f "$CODEX_DIR/tools/graphify-java-project.sh" ]] || ok=false
