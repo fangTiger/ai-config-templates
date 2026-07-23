@@ -36,7 +36,7 @@ PROFILES_DIR="$SCRIPT_DIR/scripts/plugin-profiles"
 SHARED_DIR="$PROFILES_DIR/shared"
 SHARED_CODEX_DIR="$SHARED_DIR/codex"
 GLOBAL_MANIFEST="$HOME/.claude/.harness-manifest.json"
-TARGET_DIR="${1:-.}"
+TARGET_DIR="."
 MIGRATE_MODE=false
 RESET_SESSION_STATE=false
 DEFAULT_MODE="superpowers"
@@ -260,7 +260,7 @@ if [ -d "$SHARED_DIR" ]; then
         fi
     done
     # 安装 hooks 依赖
-    if [ -f "$CLAUDE_DIR/hooks/package.json" ]; then
+    if [ -f "$CLAUDE_DIR/hooks/package.json" ] && ! is_codex_native_profile "$PROFILES_DIR/$DEFAULT_MODE"; then
         (cd "$CLAUDE_DIR/hooks" && npm install --silent 2>/dev/null) || true
     fi
     if [ -f "$SHARED_DIR/hooks/graphify-query-hook.sh" ]; then

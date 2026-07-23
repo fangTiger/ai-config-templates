@@ -242,6 +242,46 @@ class V2CodexProfileTests(unittest.TestCase):
         self.assertIn(f"# {GPT56_SOL_PROFILE} Workflow State", state)
         self.assertIn(f"## Mode: {GPT56_SOL_PROFILE}", state)
 
+    def test_v2_setup_mode_only_uses_current_directory(self):
+        project = self.tmp_path / "mode-only-project"
+        project.mkdir()
+
+        result = run_cmd(
+            [
+                str(REPO_ROOT / "v2" / "setup-project.sh"),
+                f"--mode={GPT56_SOL_PROFILE}",
+            ],
+            cwd=project,
+            env=self.env,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn("no such file or directory", result.stderr)
+        self.assertEqual(read_project_manifest(project)["mode"], GPT56_SOL_PROFILE)
+
+    def test_v2_setup_skips_claude_hook_dependencies_for_codex_native_profile(self):
+        npm_marker = self.tmp_path / "npm-called"
+        npm = Path(self.env["PATH"].split(os.pathsep)[0]) / "npm"
+        npm.write_text(
+            '#!/bin/sh\n: > "$NPM_MARKER"\nexit 0\n',
+            encoding="utf-8",
+        )
+        self.env["NPM_MARKER"] = str(npm_marker)
+        project = self.tmp_path / "codex-native-project"
+        project.mkdir()
+
+        result = run_cmd(
+            [
+                str(REPO_ROOT / "v2" / "setup-project.sh"),
+                f"--mode={GPT56_SOL_PROFILE}",
+            ],
+            cwd=project,
+            env=self.env,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertFalse(npm_marker.exists())
+
     def test_v2_switches_to_gpt56_sol_from_previous_profile(self):
         project = make_v2_project(self.tmp_path, self.env, mode=GPT55_PROFILE)
         state_file = project / ".codex" / "session-state.md"
