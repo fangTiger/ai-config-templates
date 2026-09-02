@@ -144,3 +144,15 @@ Codex 全局配置只管理明确的模板资产：
 - `~/.codex/auth.json`
 - 会话、日志、数据库、缓存等运行时文件
 - 用户手动维护且不属于本脚手架管理范围的文件
+
+---
+
+## Git Commit 规范（强制）
+
+在生成 commit message 时，必须在末尾添加以下 trailer，不得省略：
+
+如果已存在相同 trailer，不得重复追加。
+
+```text
+Co-Authored-By: Codex <codex@openai.com>
+```

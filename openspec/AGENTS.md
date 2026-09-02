@@ -454,3 +454,15 @@ openspec archive <change-id> [--yes|-y]  # Mark complete (add --yes for automati
 ```
 
 Remember: Specs are truth. Changes are proposals. Keep them in sync.
+
+---
+
+## Git Commit 规范（强制）
+
+在生成 commit message 时，必须在末尾添加以下 trailer，不得省略：
+
+如果已存在相同 trailer，不得重复追加。
+
+```text
+Co-Authored-By: Codex <codex@openai.com>
+```

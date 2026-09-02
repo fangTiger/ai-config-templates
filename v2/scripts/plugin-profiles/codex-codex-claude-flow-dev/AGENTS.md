@@ -171,3 +171,13 @@ Graphify 规则继承全局配置。本 profile 只增加 claude-flow 交接与�
 - 涉及 profile 源或落盘脚本时说明 profile/runtime sync 验证结果。
 
 ---
+
+## Git Commit 规范（强制）
+
+在生成 commit message 时，必须在末尾添加以下 trailer，不得省略：
+
+如果已存在相同 trailer，不得重复追加。
+
+```text
+Co-Authored-By: Codex <codex@openai.com>
+```

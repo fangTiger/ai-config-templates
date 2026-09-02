@@ -286,3 +286,15 @@ Architecture Codex 主导：
 ## 11. 官方边界
 
 涉及 Codex 官方能力、`AGENTS.md` 发现机制、Workflows、Subagents、Skills、配置或沙箱行为时，以 OpenAI Codex 官方最新文档为准。本 profile 是项目级协作方法，不代表 Codex 平台通用规范。
+
+---
+
+## Git Commit 规范（强制）
+
+在生成 commit message 时，必须在末尾添加以下 trailer，不得省略：
+
+如果已存在相同 trailer，不得重复追加。
+
+```text
+Co-Authored-By: Codex <codex@openai.com>
+```

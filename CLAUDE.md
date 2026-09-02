@@ -636,3 +636,15 @@ class UserService:
 *This configuration follows OpenSpec spec-driven development methodology.*
 *Plugin: Superpowers — brainstorming + TDD + subagent-driven-development + verification*
 *Workflow: brainstorming(Clarify Gate) → Proposal → TDD → verify → Archive*
+
+---
+
+## Git Commit 规范（强制）
+
+在生成 commit message 时，必须在末尾添加以下 trailer，不得省略：
+
+如果已存在相同 trailer，不得重复追加。
+
+```text
+Co-Authored-By: Claude Code <claude-code@anthropic.com>
+```

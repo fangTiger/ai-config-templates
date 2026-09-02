@@ -373,3 +373,15 @@ Stage 1: 创建提案 → Stage 2: 实现变更 → Stage 3: 归档完成
 *This configuration follows OpenSpec spec-driven development methodology.*
 *Plugin: Everything Claude Code (ECC) — AgentShield + Plankton + Continuous Learning*
 *Workflow: /plan(Clarify Gate) → Proposal(AgentShield) → /tdd(Plankton) → /code-review → /verify(AgentShield) → Archive(/learn)*
+
+---
+
+## Git Commit 规范（强制）
+
+在生成 commit message 时，必须在末尾添加以下 trailer，不得省略：
+
+如果已存在相同 trailer，不得重复追加。
+
+```text
+Co-Authored-By: Claude Code <claude-code@anthropic.com>
+```

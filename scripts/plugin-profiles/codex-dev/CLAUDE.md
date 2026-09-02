@@ -353,3 +353,15 @@ Claude: codex-reply
 *This configuration follows OpenSpec spec-driven development methodology.*
 *Mode: codex-dev — Claude Designs + Codex Implements + Gemini Frontend + 3-Party Review*
 *Workflow: brainstorming(Clarify Gate) → Proposal → Handoff → Codex TDD → Self-Review → 3-Party Review → Archive*
+
+---
+
+## Git Commit 规范（强制）
+
+在生成 commit message 时，必须在末尾添加以下 trailer，不得省略：
+
+如果已存在相同 trailer，不得重复追加。
+
+```text
+Co-Authored-By: Claude Code <claude-code@anthropic.com>
+```

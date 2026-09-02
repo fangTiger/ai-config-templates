@@ -913,3 +913,15 @@ class UserService:
 *This configuration follows OpenSpec spec-driven development methodology.*
 *Plugin: OMC (Oh My ClaudeCode) — deep-interview + ccg + Team/Ultrawork/Ralph + 32 Agents + 智能模型路由*
 *Workflow: deep-interview(Clarify Gate) → Proposal → Team/Ultrawork 执行 → Ralph verify/fix → Archive*
+
+---
+
+## Git Commit 规范（强制）
+
+在生成 commit message 时，必须在末尾添加以下 trailer，不得省略：
+
+如果已存在相同 trailer，不得重复追加。
+
+```text
+Co-Authored-By: Claude Code <claude-code@anthropic.com>
+```
