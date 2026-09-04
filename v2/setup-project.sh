@@ -279,6 +279,19 @@ echo -e "${CYAN}  Step 3: 安装 $DEFAULT_MODE 模式${NC}"
 
 PROFILE_DIR="$PROFILES_DIR/$DEFAULT_MODE"
 
+# 安装 profile 的项目级文件（profile/project-files/** → 项目根同名路径）
+# 与 switch-plugin.sh 的 install_project_files 保持一致：Claude 侧和 Codex-native 都要装。
+# 少了这步，mps 系列的 docs/agents/issue-tracker.md 落点配置不会生成。
+if [ -d "$PROFILE_DIR/project-files" ]; then
+    (cd "$PROFILE_DIR/project-files" && find . -type f -print0) |
+        while IFS= read -r -d '' rel; do
+            rel="${rel#./}"
+            mkdir -p "$TARGET_DIR/$(dirname "$rel")"
+            cp "$PROFILE_DIR/project-files/$rel" "$TARGET_DIR/$rel"
+        done
+    print_success "project-files 已安装到项目根"
+fi
+
 if is_codex_native_profile "$PROFILE_DIR"; then
     # Codex-native profile 以 AGENTS.md 和 .codex/ 为主入口。
     if [ -f "$TARGET_DIR/AGENTS.md" ]; then

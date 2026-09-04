@@ -484,6 +484,16 @@ class MpsProfileSwitchTests(unittest.TestCase):
             "templateRoot 未指向有效的模板仓库",
         )
 
+    def test_setup_installs_project_files(self):
+        """setup --mode=<profile> 必须和 switch 一样安装 project-files，否则落点机制失效。"""
+        project = make_v2_project(self.tmp_path, self.env, mode=MPS_PROFILE)
+        tracker = project / "docs" / "agents" / "issue-tracker.md"
+        self.assertTrue(
+            tracker.is_file(),
+            "setup --mode=mps 未安装 docs/agents/issue-tracker.md",
+        )
+        self.assertIn("openspec/changes/", tracker.read_text(encoding="utf-8"))
+
     def test_list_includes_mps(self):
         project = make_v2_project(self.tmp_path, self.env)
         result = run_cmd(

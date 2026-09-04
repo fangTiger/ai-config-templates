@@ -568,18 +568,12 @@ class V2CodexProfileTests(unittest.TestCase):
             "v2/scripts/switch-plugin.sh codex-codex-claude-flow-gpt56-sol-dev",
             text,
         )
+        # 旧版曾断言 V1 路径 scripts/switch-plugin_codex.sh，V1 已从 README 移除。
+        # 这里改为断言「模型路由被记录」这一意图，不绑定具体措辞。
+        self.assertIn("5.6-sol-xhigh", text)
+        self.assertIn("5.5-xhigh", text)
         self.assertIn(
-            "scripts/switch-plugin_codex.sh codex-codex-claude-flow-gpt56-sol-dev",
-            text,
-        )
-        self.assertIn("主 agent 5.6-sol-xhigh", text)
-        self.assertIn("worker、review-5.5-xhigh", text)
-        self.assertIn(
-            "# Codex 主用推荐：安装完整 Codex-native GPT-5.5 profile",
-            text,
-        )
-        self.assertIn(
-            "# V2 推荐：Codex 主工作台（完整 agents/hooks/tools/session-state）",
+            "v2/setup-project.sh --mode=codex-codex-claude-flow-gpt55-dev",
             text,
         )
         self.assertIn(
