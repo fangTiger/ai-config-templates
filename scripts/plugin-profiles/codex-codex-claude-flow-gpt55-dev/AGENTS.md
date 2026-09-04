@@ -52,7 +52,6 @@
 4. `openspec/config.yaml`、`openspec/changes/`、`openspec/specs/`。
 5. `CODE_WIKI.md`、`docs/guide/*`、`docs/domain/*`、`docs/reference/*`，如目标项目提供。
 6. 相关源码、测试、配置、脚本、日志和命令输出。
-7. Graphify context：可用图谱查询结果、`graphify-out/GRAPH_REPORT.md` 降级依据，或明确的无图谱/不可用记录。
 8. 官方或上游资料，仅在用户要求、当前事实可能过期，或本地资料不足以判断时查阅；涉及 OpenAI / Codex 时只使用 OpenAI 官方文档。
 
 缺失的可选资料只能记录为降级原因，不得阻断任务。上下文发生冲突时，以更高优先级、更新、更接近目标项目的资料为准；仍无法判断且会影响实现边界时，停止并请求确认。
@@ -61,17 +60,6 @@
 
 ---
 
-## 3. Graphify 工作流（强制）
-
-Graphify 是非平凡搜索、架构分析、影响面判断和代码修改前的强制上下文 gate。强制的是“必须先查询或记录降级依据”，不是要求 graphify CLI 永远成功。
-
-- 适用范围：架构理解、依赖关系、影响面、跨模块修改、非平凡代码搜索和任何代码修改；纯文案、小配置或无代码任务可记录不适用理由。
-- 如果存在 `graphify-out/graph.json`，Analyze 阶段必须先查询结构：`graphify query "<module/file> architecture dependencies"`。
-- 修改代码前，必须查询影响范围：`graphify query "<module/file> impact callers tests dependencies"`。
-- 如果 graphify CLI / MCP 不可用、图谱过期或没有匹配结果，必须读取 `graphify-out/GRAPH_REPORT.md` 后再继续。
-- 如果项目没有 `graphify-out/` 或报告也不可用，必须在计划、handoff、review 或最终回复中记录 `Graphify: unavailable` 及原因，再使用源码、测试和 `rg` 分析。
-- Handoff Task Package、Review Input 和最终交付必须包含 Graphify context 或降级依据。
-- 不得跳过 Graphify Gate，也不得把 graphify 结果当作唯一依据。
 
 ---
 
@@ -84,7 +72,6 @@ Graphify 是非平凡搜索、架构分析、影响面判断和代码修改前�
 - Acceptance criteria。
 - Out-of-scope。
 - OpenSpec 判断和理由。
-- Graphify context 或降级依据。
 - 每个 task 的 Executor：Architecture Codex、Implementation Codex、Review Codex 或人工负责人。
 - Validation 命令。
 - Stop conditions。
@@ -120,12 +107,10 @@ ANALYZE  ->  DESIGN   ->  HANDOFF  ->  IMPLEMENT  ->  REVIEW      ->  VERIFY
 Architecture Codex 主导：
 
 1. 分类 dirty baseline：`git status --porcelain`。
-2. 执行 Graphify 强制 Gate，获得图谱上下文或记录降级依据。
 3. 检查 OpenSpec：`openspec list --specs`、`openspec list`。
 4. 过 Clarify Gate，明确验收标准、Executor、验证和 stop conditions。
 5. 可请求 Implementation Codex 或 fresh Codex context 做技术可行性、场景或大上下文补充，但最终边界由 Architecture Codex 裁决。
 
-Gate：Graphify context / 降级依据、验收标准、Executor、OpenSpec 判断、验证命令或风险边界不清楚时，不进入 DESIGN。
 
 ### Stage 2: DESIGN
 
@@ -156,7 +141,6 @@ Handoff Task Package 必须包含：
 - Forbidden files。
 - Validation。
 - Stop conditions。
-- Graphify context。
 - GitBaseline。
 - SessionStatePath: `.codex/session-state.md`。
 - PreExistingDirtyBaseline。

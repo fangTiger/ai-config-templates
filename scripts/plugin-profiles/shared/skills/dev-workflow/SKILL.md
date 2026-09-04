@@ -71,7 +71,6 @@ OpenSpec 任务使用 `openspec/changes/<change-id>/proposal.md`、`design.md`�
 | 公共 API / 权限 / 数据访问 | 定向测试 + 影响面说明 + 扩大验证 |
 | OpenSpec | `openspec validate <change-id> --strict`，必要时 `openspec validate --all` |
 | `.codex` / hooks / skills / tools | JSON、shell、Node 语法校验，说明 profile 是否同步 |
-| graphify | `bash .codex/tools/graphify-java-project.sh --incremental` |
 
 交付说明至少包含：
 

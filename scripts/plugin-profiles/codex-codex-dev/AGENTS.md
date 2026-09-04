@@ -41,10 +41,8 @@
 3. `openspec/config.yaml`、`openspec/changes/`、`openspec/specs/`。
 4. `CODE_WIKI.md`、`docs/guide/*`、`docs/domain/*`、`docs/reference/*`，如目标项目提供。
 5. 相关源码、测试、配置、脚本、日志和命令输出。
-6. `graphify-out/GRAPH_REPORT.md` 或可用图谱查询结果，如存在且任务涉及架构、依赖或影响面。
 7. 官方或上游资料，仅在用户要求、当前事实可能过期，或本地资料不足以判断时查阅；涉及 OpenAI/Codex 时只使用 OpenAI 官方文档。
 
-Graphify 是条件路由，不是硬依赖：若目标项目存在 `graphify-out/graph.json`，且任务涉及架构理解、依赖关系、影响面、跨模块修改或非平凡代码搜索，Analyze 阶段优先使用可用图谱查询或读取 `graphify-out/GRAPH_REPORT.md` 建立结构上下文；graphify 不可用、过期或无匹配结果时，记录降级原因并继续用源码、测试和 `rg` 分析，不得因此阻断任务。
 
 读取资料的目标是形成可执行判断：任务级别、OpenSpec 是否需要、可编辑范围、验证方式、风险边界和停止条件。
 
@@ -131,7 +129,6 @@ Architecture Codex 是架构与编排角色，通常由主线程承担。它负�
 - Editable files / Forbidden files。
 - 验证命令或无法运行的原因。
 - stop conditions。
-- Graphify context：图谱查询结果、`GRAPH_REPORT.md` 降级依据，或不适用理由。
 - dirty baseline 与生成噪声分类。
 
 ### Implementation Codex
@@ -168,7 +165,6 @@ Review Codex 的结论只能是：
 | Gate | 通过标准 |
 | --- | --- |
 | Intake | 用户请求、排除项、上下文来源和 dirty baseline 已确认 |
-| Analyze | Graphify 条件路由已执行或记录降级原因；任务级别、OpenSpec 判断、风险边界、验收标准、out-of-scope、验证命令和 stop conditions 已确认 |
 | Design | 任务拆分、文件边界、验证命令、stop conditions 已确认 |
 | Handoff | Implementation Codex 只接收已批准任务包；并发任务具备不重叠 editable files 和 worktree / patch handback 协议 |
 | Implementation Evidence | 进入 review 前已有 changed files、验证证据、未验证项、范围扩展记录 |

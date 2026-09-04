@@ -113,14 +113,6 @@ mattpocock-skills 没有对应 skill 的两项能力，以内联规则强制执�
 
 ---
 
-## 5. Graphify
-
-存在 `graphify-out/graph.json` 时，非平凡搜索或改代码前先用 `graphify` 检查结构和影响范围：
-
-- 结构检索：`graphify query "<module/file> architecture dependencies"`
-- 影响检查：`graphify query "<module/file> impact callers tests dependencies"`
-
-不可用时降级为阅读 `graphify-out/GRAPH_REPORT.md` 或继续原流程，禁止因 graphify 失败阻断任务。
 
 ---
 

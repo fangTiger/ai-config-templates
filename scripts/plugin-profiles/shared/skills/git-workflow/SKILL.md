@@ -97,5 +97,4 @@ PR 描述至少包含：
 
 - 不执行 `git reset --hard`、`git checkout -- <file>` 等破坏性命令，除非用户明确要求。
 - 不提交 `AGENTS.md`、`.codex/` 等本地运行态文件；项目自有 review skill 这类明确纳入版本控制的 `.codex/skills/<skill-name>/SKILL.md` 例外。需要持久化时同步到本脚手架仓库的 `scripts/plugin-profiles/` 模板源。
-- 不把 `target/`、`graphify-out/`、`.codex/runtime-cache`、`.codex/.backup-*` 等生成产物作为业务改动提交。
 - 不因提交方便而合并其他任务的未跟踪文件。

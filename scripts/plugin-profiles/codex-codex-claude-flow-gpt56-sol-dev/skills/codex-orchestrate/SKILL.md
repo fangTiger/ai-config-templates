@@ -10,7 +10,6 @@ description: Orchestrates codex-codex-claude-flow-gpt56-sol-dev workflow. Use wh
 在 `codex-codex-claude-flow-gpt56-sol-dev` 模式下，Architecture Codex 使用本技能完成：
 - 任务分级（小 / 中 / 大）
 - 是否需要 OpenSpec 的判断
-- Graphify 强制 Gate 与影响面判断
 - proposal/tasks 规划
 - 是否需要拆分为多个 Implementation Codex
 - 交付前的审查与推进决策
@@ -21,15 +20,14 @@ description: Orchestrates codex-codex-claude-flow-gpt56-sol-dev workflow. Use wh
 
 - 项目根 `AGENTS.md` 明确当前入口契约为 `codex-codex-claude-flow-gpt56-sol-dev`
 - 用户提出中等及以上复杂度的开发需求
-- 关键词：实现、设计、拆解、编排、开始开发、开始实现、handoff、交接、审查、Clarify Gate、Graphify、影响面
+- 关键词：实现、设计、拆解、编排、开始开发、开始实现、handoff、交接、审查、Clarify Gate、影响面
 
 ## 步骤 1：读取主控规则
 
 开始前必须读取：
 1. 项目根 `AGENTS.md`
 2. 项目根 `openspec/config.yaml`、`openspec/changes/`、`openspec/specs/`（如任务涉及变更提案）
-3. 按 `AGENTS.md` 上下文优先级读取 `CODE_WIKI.md`、`docs/guide/*`、`docs/domain/*`、`docs/reference/*`、Graphify context、相关源码和测试；不存在时记录缺失与替代依据
-4. 对架构、依赖、影响面、跨模块修改、非平凡搜索或代码修改，必须先获取 Graphify context：有 `graphify-out/graph.json` 时查询结构 / 影响面；无法查询时读取 `graphify-out/GRAPH_REPORT.md`；仍不可用时记录 `Graphify: unavailable` 及原因
+3. 按 `AGENTS.md` 上下文优先级读取 `CODE_WIKI.md`、`docs/guide/*`、`docs/domain/*`、`docs/reference/*`、相关源码和测试；不存在时记录缺失与替代依据
 
 ## 步骤 1.5：Clarify Gate
 
@@ -40,7 +38,6 @@ description: Orchestrates codex-codex-claude-flow-gpt56-sol-dev workflow. Use wh
 - 每个中 / 大任务的 Executor 是否明确到 Architecture Codex、Implementation Codex、Review Codex 或人工负责人
 - Validation 和 stop conditions 是否可执行
 - Review mode 是否明确：独立 Review Codex、替代 reviewer，或小任务轻量自审
-- Graphify 强制 Gate 是否已执行，或是否记录降级原因
 
 缺失项会影响实现边界时，只问必要问题；未通过 Clarify Gate 不进入 DESIGN / HANDOFF / IMPLEMENT。
 
@@ -113,7 +110,6 @@ Architecture Codex 需要输出 Gate 1: Handoff Task Package，作为 Implementa
 - Out-of-scope:
 - Validation:
 - Stop conditions:
-- Graphify context:
 - GitBaseline:
 - SessionStatePath: .codex/session-state.md
 - Patch artifact:
@@ -130,7 +126,6 @@ Architecture Codex 需要输出 Gate 1: Handoff Task Package，作为 Implementa
 - `PreExistingDirtyBaseline` 和 `GeneratedOrNoisyArtifacts` 只能解释 status/diff，不得静默纳入 editable scope。
 - `Validation` 必须包含可运行命令或明确无法运行的原因。
 - `Stop conditions` 必须覆盖范围扩展、证据缺失、依赖未满足、安全边界变化。
-- `Graphify context` 记录图谱查询、`GRAPH_REPORT.md` 降级依据或不适用理由。
 - 并发任务必须明确 `AgentId` / `SliceId`，editable files 不重叠，并指定独立 worktree 或 patch artifact handback。
 - 并发 Implementation Codex 默认使用独立 git worktree；无法使用独立 worktree 时，不得混写共享工作树，必须通过 patch artifact handback。
 - 共享配置、公共 API 契约、数据模型、迁移/持久化结构、profile/workflow/skill/hook、session-state、构建配置、测试配置以及任何未列入 Editable files 的文件不得并发直写。

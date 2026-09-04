@@ -40,7 +40,6 @@ TARGET_DIR="."
 MIGRATE_MODE=false
 RESET_SESSION_STATE=false
 DEFAULT_MODE="superpowers"
-GRAPHIFY_IGNORE_TEMPLATE="$SCRIPT_DIR/graphifyignore.template"
 
 # 解析参数
 for arg in "$@"; do
@@ -263,9 +262,6 @@ if [ -d "$SHARED_DIR" ]; then
     if [ -f "$CLAUDE_DIR/hooks/package.json" ] && ! is_codex_native_profile "$PROFILES_DIR/$DEFAULT_MODE"; then
         (cd "$CLAUDE_DIR/hooks" && npm install --silent 2>/dev/null) || true
     fi
-    if [ -f "$SHARED_DIR/hooks/graphify-query-hook.sh" ]; then
-        cp "$SHARED_DIR/hooks/graphify-query-hook.sh" "$CODEX_DIR/hooks/graphify-query-hook.sh"
-    fi
     chmod +x "$CLAUDE_DIR/hooks/"*.sh "$CODEX_DIR/hooks/"*.sh 2>/dev/null || true
     print_success "Shared 资源已安装"
 else
@@ -364,7 +360,6 @@ else
         "hooks": [
           {
             "type": "command",
-            "command": "bash .codex/hooks/graphify-query-hook.sh"
           }
         ]
       }
@@ -373,13 +368,6 @@ else
 }
 HOOKSEOF
     print_success ".codex/hooks.json 已安装"
-fi
-
-if [ -f "$TARGET_DIR/.graphifyignore" ]; then
-    print_info ".graphifyignore 已存在，跳过"
-elif [ -f "$GRAPHIFY_IGNORE_TEMPLATE" ]; then
-    cp "$GRAPHIFY_IGNORE_TEMPLATE" "$TARGET_DIR/.graphifyignore"
-    print_success ".graphifyignore 已安装"
 fi
 
 echo ""
@@ -402,31 +390,7 @@ else
 fi
 
 # ═══════════════════════════════════════════════
-# Step 5: Graphify（可选）
 # ═══════════════════════════════════════════════
-echo -e "${CYAN}  Step 5: Graphify（可选）${NC}"
-if command -v graphify &> /dev/null; then
-    print_success "graphify 已安装"
-else
-    print_info "未检测到 graphify"
-    prompt_read "安装 Graphify? (y/n): " install_graphify
-    if [ "$install_graphify" = "y" ] || [ "$install_graphify" = "Y" ]; then
-        if command -v python3 &> /dev/null; then
-            python3 -m pip install --user graphifyy 2>/dev/null && {
-                hash -r 2>/dev/null || true
-                if command -v graphify &> /dev/null; then
-                    graphify install 2>/dev/null && print_success "graphify 安装完成" || print_info "graphify 已安装，请手动执行: graphify install"
-                else
-                    print_info "graphify 包已安装，请重新打开终端后执行: graphify install"
-                fi
-            } || print_info "自动安装失败，请手动执行: pip install graphifyy && graphify install"
-        else
-            print_info "未检测到 python3，请手动执行: pip install graphifyy && graphify install"
-        fi
-    fi
-fi
-print_info "快速安装: pip install graphifyy && graphify install"
-print_info "项目内常用命令: /graphify ."
 
 # ═══════════════════════════════════════════════
 # Step 6: MCP 安装（可选）
@@ -448,11 +412,6 @@ if [ -f "$V1_TEMPLATE_DIR/templates/opencode.json" ] && [ ! -f "$TARGET_DIR/open
     print_success "opencode.json 已安装"
 elif [ -f "$TARGET_DIR/opencode.json" ]; then
     print_info "opencode.json 已存在，跳过"
-fi
-if [ -f "$V1_TEMPLATE_DIR/templates/.opencode/plugins/graphify.js" ]; then
-    mkdir -p "$TARGET_DIR/.opencode/plugins"
-    cp "$V1_TEMPLATE_DIR/templates/.opencode/plugins/graphify.js" "$TARGET_DIR/.opencode/plugins/graphify.js"
-    print_success "OpenCode graphify 插件已安装"
 fi
 if [ -f "$V1_TEMPLATE_DIR/templates/AGENTS.md" ] && [ ! -f "$TARGET_DIR/AGENTS.md" ]; then
     cp "$V1_TEMPLATE_DIR/templates/AGENTS.md" "$TARGET_DIR/AGENTS.md"
@@ -522,8 +481,7 @@ cat > "$PROJECT_MANIFEST" << MANIFESTEOF
     ".codex/tools",
     ".codex/config.toml",
     ".codex/session-state.md",
-    ".codex/session-state.template.md",
-    ".graphifyignore"
+    ".codex/session-state.template.md"
   ],
   "installedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "switchedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -555,13 +513,10 @@ else
 fi
 [ -f "$CLAUDE_DIR/settings.json" ] && print_success "settings.json 存在" || { print_error "settings.json 缺失"; ok=false; }
 [ -f "$PROJECT_MANIFEST" ] && print_success "manifest 存在" || { print_error "manifest 缺失"; ok=false; }
-[ -f "$CLAUDE_DIR/hooks/graphify-query-hook.sh" ] && print_success "Claude graphify hook 存在" || print_info "Claude graphify hook 未安装"
 [ -f "$CODEX_DIR/hooks.json" ] && print_success ".codex/hooks.json 存在" || { print_error ".codex/hooks.json 缺失"; ok=false; }
-[ -f "$CODEX_DIR/hooks/graphify-query-hook.sh" ] && print_success "Codex graphify hook 存在" || { print_error "Codex graphify hook 缺失"; ok=false; }
 [ -d "$PROFILE_DIR/codex/skills" ] && [ "$(ls -A "$PROFILE_DIR/codex/skills" 2>/dev/null)" ] && (
     [ -d "$CODEX_DIR/skills" ] && [ "$(ls -A "$CODEX_DIR/skills" 2>/dev/null)" ] && print_success "Codex skills 存在"
 ) || [ ! -d "$PROFILE_DIR/codex/skills" ] || { print_error "Codex skills 缺失"; ok=false; }
-[ -f "$TARGET_DIR/.graphifyignore" ] && print_success ".graphifyignore 存在" || print_info ".graphifyignore 未安装"
 
 if ! is_codex_native_profile "$PROFILE_DIR"; then
     if grep -q "harness-version: v2" "$TARGET_DIR/CLAUDE.md" 2>/dev/null; then

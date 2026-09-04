@@ -59,7 +59,6 @@ description: Orchestrates structured context handoff from Architecture Codex to 
 - `acceptance_criteria`: 验收标准
 - `out_of_scope`: 明确不在本轮处理范围内的内容
 - `risk_notes`: 已知风险、兼容性注意点、禁止动作
-- `Graphify context`: 图谱查询结果、`GRAPH_REPORT.md` 降级依据或不适用理由
 - `GitBaseline`: handoff 基线 commit
 - `SessionStatePath`: `.codex/session-state.md`
 - `Patch artifact`: 共享 worktree 时的补丁交回路径；若使用隔离工作区，则记录 worktree path
@@ -83,7 +82,6 @@ Architecture Codex 必须确认每个 task 都具备 Gate 1 字段：
 - Out-of-scope
 - Validation
 - Stop conditions
-- Graphify context
 - GitBaseline
 - SessionStatePath
 - Patch artifact 或 worktree path
@@ -127,7 +125,6 @@ Architecture Codex 必须确认每个 task 都具备 Gate 1 字段：
 - `AgentId` / `SliceId`
 - `SessionStatePath`
 - `TaskScopeFiles` / `PreExistingDirtyBaseline` / `GeneratedOrNoisyArtifacts`
-- Graphify context
 - Patch artifact 或 worktree path
 - 验证命令
 - IntegrationOwner 和 handback 格式

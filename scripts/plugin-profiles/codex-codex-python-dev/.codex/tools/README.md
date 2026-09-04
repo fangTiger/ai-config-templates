@@ -31,6 +31,4 @@ bash .codex/tools/verify-python-project.sh
 
 `--print-plan` 只输出计划，不执行测试。默认模式会执行 `recommended_validation_commands`；空项目会拒绝执行并提示先走 `codex-python-bootstrap`。
 
-## graphify-python-project.sh
 
-Python 影响面辅助工具，优先读取 `graphify-out/graph.json`，不可用时提示读取 `graphify-out/GRAPH_REPORT.md`。

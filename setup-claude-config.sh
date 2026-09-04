@@ -93,11 +93,9 @@ print_step "Installing skill activation hooks..."
 cp "$TEMPLATE_DIR/hooks/skill-activation-prompt.sh" .claude/hooks/ 2>/dev/null || true
 cp "$TEMPLATE_DIR/hooks/skill-activation-prompt.ts" .claude/hooks/ 2>/dev/null || true
 cp "$TEMPLATE_DIR/hooks/post-tool-use-tracker.sh" .claude/hooks/ 2>/dev/null || true
-cp "$TEMPLATE_DIR/hooks/graphify-query-hook.sh" .claude/hooks/ 2>/dev/null || true
 cp "$TEMPLATE_DIR/hooks/package.json" .claude/hooks/ 2>/dev/null || true
 
 chmod +x .claude/hooks/*.sh 2>/dev/null || true
-cp "$TEMPLATE_DIR/hooks/graphify-query-hook.sh" .codex/hooks/ 2>/dev/null || true
 chmod +x .codex/hooks/*.sh 2>/dev/null || true
 
 cat > .codex/hooks.json << 'HOOKSEOF'
@@ -107,20 +105,10 @@ cat > .codex/hooks.json << 'HOOKSEOF'
       {
         "matcher": "Bash|Read|Grep|Glob|Edit|MultiEdit|Write|NotebookEdit",
         "hooks": [
-          {
-            "type": "command",
-            "command": "bash .codex/hooks/graphify-query-hook.sh"
-          }
-        ]
-      }
-    ]
   }
 }
 HOOKSEOF
 
-if [ -f "$TEMPLATE_DIR/graphifyignore.template" ] && [ ! -f .graphifyignore ]; then
-    cp "$TEMPLATE_DIR/graphifyignore.template" .graphifyignore
-fi
 print_success "Hooks installed"
 echo ""
 
@@ -326,38 +314,6 @@ else
 fi
 echo ""
 
-# Step 10: Graphify Installation
-echo -e "${CYAN}═══════════════════════════════════════════════${NC}"
-echo -e "${CYAN}  Graphify (Code Knowledge Graph)${NC}"
-echo -e "${CYAN}═══════════════════════════════════════════════${NC}"
-echo ""
-print_step "Graphify 为 Claude/Codex 搜索提供代码图谱上下文"
-echo ""
-if command -v graphify &> /dev/null; then
-    print_success "graphify 已安装"
-else
-    prompt_read "Install Graphify? (y/n): " install_graphify
-    if [ "$install_graphify" = "y" ] || [ "$install_graphify" = "Y" ]; then
-        if command -v python3 &> /dev/null; then
-            python3 -m pip install --user graphifyy 2>/dev/null && {
-                hash -r 2>/dev/null || true
-                if command -v graphify &> /dev/null; then
-                    graphify install 2>/dev/null && print_success "graphify 安装完成" || print_info "graphify 已安装，请手动执行: graphify install"
-                else
-                    print_info "graphify 包已安装，请重新打开终端后执行: graphify install"
-                fi
-            } || print_info "自动安装失败，请手动执行: pip install graphifyy && graphify install"
-        else
-            print_info "未检测到 python3，请手动执行: pip install graphifyy && graphify install"
-        fi
-    else
-        print_info "Skipping Graphify installation"
-    fi
-fi
-print_info "快速安装: pip install graphifyy && graphify install"
-print_info "项目内常用命令: /graphify ."
-echo ""
-
 # Step 11: MCP Tools Installation
 echo -e "${CYAN}═══════════════════════════════════════════════${NC}"
 echo -e "${CYAN}  MCP Tools (Multi-AI Collaboration)${NC}"
@@ -420,10 +376,6 @@ if [ "$install_mcp" = "y" ] || [ "$install_mcp" = "Y" ]; then
         print_info "opencode.json already exists, skipping"
     fi
     mkdir -p .opencode/plugins
-    if [ -f "$TEMPLATE_DIR/templates/.opencode/plugins/graphify.js" ]; then
-        cp "$TEMPLATE_DIR/templates/.opencode/plugins/graphify.js" .opencode/plugins/graphify.js
-        print_success "OpenCode graphify plugin installed"
-    fi
     if [ -f "$TEMPLATE_DIR/templates/AGENTS.md" ] && [ ! -f ./AGENTS.md ]; then
         cp "$TEMPLATE_DIR/templates/AGENTS.md" ./AGENTS.md
         print_success "AGENTS.md installed"
@@ -485,13 +437,6 @@ for dir in .claude/skills .claude/hooks; do
         dirs_ok=false
     fi
 done
-
-if [ -f .codex/hooks/graphify-query-hook.sh ]; then
-    print_success ".codex graphify hook exists"
-else
-    print_error ".codex graphify hook missing"
-    dirs_ok=false
-fi
 
 # Check CLAUDE.md
 if [ -f CLAUDE.md ]; then

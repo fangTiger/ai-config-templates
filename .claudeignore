@@ -36,9 +36,6 @@ Thumbs.db
 *.log
 log/
 
-# 图谱输出（graphify 会自动降级读取）
-graphify-out/
-
 # OpenCode 内部目录
 .opencode/
 

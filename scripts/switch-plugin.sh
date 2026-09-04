@@ -32,67 +32,6 @@ NC='\033[0m'
 SWITCHABLE_DIRS=(hooks skills agents commands rules)
 CODEX_SWITCHABLE_DIRS=(skills)
 
-ensure_graphify_assets() {
-    local dry_run=$1
-    local shared_dir="$PROFILES_DIR/shared"
-
-    if [[ "$dry_run" == "true" ]]; then
-        echo -e "  ${YELLOW}[DRY-RUN]${NC} 确保 .codex/hooks.json、.codex/hooks/*、.graphifyignore"
-        return
-    fi
-
-    mkdir -p "$CODEX_DIR/hooks"
-
-    for hook_file in "$shared_dir"/hooks/*; do
-        [[ -f "$hook_file" ]] || continue
-        cp "$hook_file" "$CODEX_DIR/hooks/$(basename "$hook_file")"
-        chmod +x "$CODEX_DIR/hooks/$(basename "$hook_file")" 2>/dev/null || true
-    done
-
-    cat > "$CODEX_DIR/hooks.json" << 'HOOKSEOF'
-{
-  "hooks": {
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .codex/hooks/skill-activation-prompt.sh"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Edit|MultiEdit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .codex/hooks/graphify-query-hook.sh"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit|MultiEdit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .codex/hooks/post-tool-use-tracker.sh"
-          }
-        ]
-      }
-    ]
-  }
-}
-HOOKSEOF
-
-    if [[ ! -f "$PROJECT_DIR/.graphifyignore" && -f "$TEMPLATE_DIR/graphifyignore.template" ]]; then
-        cp "$TEMPLATE_DIR/graphifyignore.template" "$PROJECT_DIR/.graphifyignore"
-    fi
-}
-
 usage() {
     echo -e "${BLUE}插件配置切换器${NC}"
     echo ""
@@ -408,7 +347,6 @@ switch_profile() {
     # Step 3: 复制文件
     echo -e "${YELLOW}[3/6] 复制 shared + profile 文件...${NC}"
     copy_profile "$target" "$dry_run"
-    ensure_graphify_assets "$dry_run"
 
     # Step 4: 更新标记
     echo -e "${YELLOW}[4/6] 更新 .active-plugin 标记...${NC}"

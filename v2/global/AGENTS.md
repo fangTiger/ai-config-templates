@@ -56,14 +56,6 @@ openspec list
 
 ---
 
-## 1. Graphify 工作流
-
-如果项目下存在 `graphify-out/graph.json`，在非平凡搜索或改代码前必须先检查结构和影响范围。
-
-- 结构检索：`graphify query "<module/file> architecture dependencies"`
-- 影响检查：`graphify query "<module/file> impact callers tests dependencies"`
-- graphify 不可用时，降级读取 `graphify-out/GRAPH_REPORT.md`。
-- graphify 失败不得阻断任务，降级后继续原流程。
 
 ---
 

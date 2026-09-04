@@ -31,12 +31,6 @@
 
 ---
 
-## Graphify 工作流（强制）
-
-存在 `graphify-out/graph.json` 时，非平凡搜索或改代码前先用 `graphify` 检查结构和影响范围。
-- 结构检索：`graphify query "<module/file> architecture dependencies"`
-- 影响检查：`graphify query "<module/file> impact callers tests dependencies"`
-- 不可用时降级为阅读 `graphify-out/GRAPH_REPORT.md`，禁止因 graphify 失败阻断任务。
 
 ---
 

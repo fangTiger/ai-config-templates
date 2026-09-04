@@ -56,7 +56,6 @@ Gate：dirty baseline 未分类、目标文件不可写或用户请求与现有�
 动作：
 
 1. 按 `AGENTS.md` 的上下文来源读取资料。
-2. 执行 Graphify 条件路由：如果存在 `graphify-out/graph.json`，且任务涉及架构、依赖、影响面、跨模块修改或非平凡代码搜索，优先使用可用图谱查询目标模块的 `architecture dependencies`；修改代码前还要查询或梳理 `impact callers tests dependencies`。如果 graphify CLI/MCP 不可用、图谱过期或无匹配结果，降级读取 `graphify-out/GRAPH_REPORT.md`；仍不可用时记录原因并继续原流程。
 3. 检查 OpenSpec：`openspec list --specs`、`openspec list`。
 4. 对照现有 spec / change 判断是否复用、更新或新建提案。
 5. 识别任务级别：小 / 中 / 大。
@@ -81,7 +80,6 @@ Clarify Gate：
 - Risk boundaries。
 - Stop conditions。
 
-Gate：Graphify 条件路由未执行且未记录降级原因、任务边界、OpenSpec 状态、验收标准、验证方式或风险影响不清楚时，不进入 DESIGN / IMPLEMENT。
 
 ---
 
@@ -95,7 +93,6 @@ Gate：Graphify 条件路由未执行且未记录降级原因、任务边界、O
 2. 中任务：拆成 bite-sized tasks；每个 task 必须能独立验收。
 3. 需要 OpenSpec 时：准备或更新 proposal / design / tasks / spec delta，运行 `openspec validate <change-id> --strict --no-interactive`，记录审批状态；未批准不得进入 HANDOFF 或 IMPLEMENT。
 4. 大任务：按 slice 推进；公共契约、schema、核心接口、迁移边界必须先由单一 owner 固化。
-5. 若存在 Graphify impact 结果，将 callers、tests、依赖和受影响模块转成 editable / forbidden 边界或验证命令；若只做了降级分析，记录替代依据。
 6. 若要并发，先确认 editable files 完全不重叠。
 7. 定义 Integration Owner，负责 patch/worktree 汇总、冲突裁决和最终 verify。
 
@@ -112,7 +109,6 @@ Design 输出至少包含：
 - Forbidden files:
 - Validation:
 - Stop conditions:
-- Graphify context:
 - GitBaseline:
 - Split strategy:
 - IntegrationOwner:
@@ -140,7 +136,6 @@ Handoff Task Package 必须包含：
 - Out-of-scope:
 - Validation:
 - Stop conditions:
-- Graphify context:
 - GitBaseline:
 - SessionStatePath:
 - Patch artifact or Worktree path:

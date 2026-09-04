@@ -89,8 +89,6 @@ class V1CodexProfileTests(unittest.TestCase):
             GPT56_SOL_PROFILE,
         )
         self.assertTrue((self.project / "AGENTS.md").is_file())
-        self.assertTrue((self.project / ".codex" / "hooks" / "graphify-query-hook.sh").is_file())
-        self.assertTrue((self.project / ".codex" / "tools" / "graphify-java-project.sh").is_file())
         self.assertTrue((self.project / ".codex" / "skills" / "codex-orchestrate" / "SKILL.md").is_file())
 
         state = (self.project / ".codex" / "session-state.md").read_text(encoding="utf-8")

@@ -20,7 +20,6 @@ CLAUDE_DIR="$PROJECT_DIR/.claude"
 CODEX_DIR="$PROJECT_DIR/.codex"
 GLOBAL_MANIFEST="$HOME/.claude/.harness-manifest.json"
 PROJECT_MANIFEST="$CLAUDE_DIR/.harness-manifest.json"
-GRAPHIFY_IGNORE_TEMPLATE="$V2_DIR/graphifyignore.template"
 RESET_SESSION_STATE=false
 FORCE_OVERWRITE=false
 PRESERVED_CODEX_SESSION_STATE=""
@@ -197,44 +196,6 @@ install_project_files() {
         cp "$src/$rel" "$PROJECT_DIR/$rel"
         echo -e "  ${GREEN}✓${NC} $rel"
     done
-}
-
-ensure_graphify_assets() {
-    local dry_run=$1
-
-    if [[ "$dry_run" == "true" ]]; then
-        echo -e "  ${YELLOW}[DRY-RUN]${NC} 确保 .codex/hooks.json、.codex/hooks/graphify-query-hook.sh、.graphifyignore"
-        return
-    fi
-
-    mkdir -p "$CODEX_DIR/hooks"
-
-    if [[ -f "$SHARED_DIR/hooks/graphify-query-hook.sh" ]]; then
-        cp "$SHARED_DIR/hooks/graphify-query-hook.sh" "$CODEX_DIR/hooks/graphify-query-hook.sh"
-        chmod +x "$CODEX_DIR/hooks/graphify-query-hook.sh" 2>/dev/null || true
-    fi
-
-    cat > "$CODEX_DIR/hooks.json" << 'HOOKSEOF'
-{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Edit|MultiEdit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .codex/hooks/graphify-query-hook.sh"
-          }
-        ]
-      }
-    ]
-  }
-}
-HOOKSEOF
-
-    if [[ ! -f "$PROJECT_DIR/.graphifyignore" && -f "$GRAPHIFY_IGNORE_TEMPLATE" ]]; then
-        cp "$GRAPHIFY_IGNORE_TEMPLATE" "$PROJECT_DIR/.graphifyignore"
-    fi
 }
 
 usage() {
@@ -681,12 +642,6 @@ switch_profile() {
 
     install_project_files "$profile_dir" "$dry_run"
 
-    if [[ "$target_is_codex_native" != "true" ]]; then
-        ensure_graphify_assets "$dry_run"
-    elif [[ ! -f "$PROJECT_DIR/.graphifyignore" && -f "$GRAPHIFY_IGNORE_TEMPLATE" && "$dry_run" != "true" ]]; then
-        cp "$GRAPHIFY_IGNORE_TEMPLATE" "$PROJECT_DIR/.graphifyignore"
-    fi
-
     # 更新 manifest
     echo -e "${YELLOW}[5/6] 更新 manifest...${NC}"
     if [[ "$dry_run" != "true" ]]; then
@@ -706,12 +661,9 @@ switch_profile() {
             [[ ! -f "$PROJECT_DIR/AGENTS.md" ]] && echo -e "  ${RED}✗ 缺失 AGENTS.md${NC}" && ok=false
             [[ ! -f "$CODEX_DIR/config.toml" ]] && echo -e "  ${RED}✗ 缺失 .codex/config.toml${NC}" && ok=false
             [[ ! -f "$CODEX_DIR/hooks.json" ]] && echo -e "  ${RED}✗ 缺失 .codex/hooks.json${NC}" && ok=false
-            [[ ! -f "$CODEX_DIR/hooks/graphify-query-hook.sh" ]] && echo -e "  ${RED}✗ 缺失 .codex graphify hook${NC}" && ok=false
             [[ ! -f "$CODEX_DIR/session-state.md" ]] && echo -e "  ${RED}✗ 缺失 .codex/session-state.md${NC}" && ok=false
         else
             [[ ! -f "$PROJECT_DIR/CLAUDE.md" ]] && echo -e "  ${RED}✗ 缺失 CLAUDE.md${NC}" && ok=false
-            [[ ! -f "$CODEX_DIR/hooks.json" ]] && echo -e "  ${RED}✗ 缺失 .codex/hooks.json${NC}" && ok=false
-            [[ ! -f "$CODEX_DIR/hooks/graphify-query-hook.sh" ]] && echo -e "  ${RED}✗ 缺失 .codex graphify hook${NC}" && ok=false
             if [[ -d "$PROFILES_DIR/$target/codex/skills" && ! -d "$PROJECT_DIR/.codex/skills" ]]; then
                 echo -e "  ${RED}✗ 缺失 .codex/skills${NC}"
                 ok=false

@@ -133,8 +133,8 @@ The system SHALL provide V2 first-class support for Codex-native `codex-codex-*`
 - **THEN** the project receives root `AGENTS.md`
 - **AND** `.codex/config.toml` configures the profile model routing
 - **AND** `.codex/agents/worker-codex.toml` and `.codex/agents/review-codex.toml` are installed
-- **AND** `.codex/hooks.json`, `.codex/hooks/graphify-query-hook.sh`, `.codex/hooks/post-tool-use-tracker.sh`, `.codex/hooks/skill-activation-prompt.sh`, and `.codex/hooks/skill-activation-prompt.cjs` are installed
-- **AND** `.codex/tools/runtime-verification-summary.sh` and `.codex/tools/graphify-java-project.sh` are installed
+- **AND** `.codex/hooks.json`, `.codex/hooks/post-tool-use-tracker.sh`, `.codex/hooks/skill-activation-prompt.sh`, and `.codex/hooks/skill-activation-prompt.cjs` are installed
+- **AND** `.codex/tools/runtime-verification-summary.sh` is installed
 - **AND** `.codex/session-state.md` and `.codex/session-state.template.md` are installed
 - **AND** the project V2 manifest records `mode` as `codex-codex-claude-flow-gpt55-dev`
 

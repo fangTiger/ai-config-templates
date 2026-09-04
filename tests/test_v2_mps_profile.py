@@ -123,8 +123,12 @@ class MpsProfileTemplateTests(unittest.TestCase):
 
     def test_settings_keeps_hooks(self):
         settings = read_json(PROFILES_DIR / MPS_PROFILE / "settings.json")
-        for event in ("UserPromptSubmit", "PreToolUse", "PostToolUse"):
+        # PreToolUse 目前不注册任何 hook
+        for event in ("UserPromptSubmit", "PostToolUse"):
             self.assertIn(event, settings["hooks"], f"缺少 {event} hook")
+        self.assertNotIn(
+            "PreToolUse", settings["hooks"], "不应注册 PreToolUse hook"
+        )
 
     def test_claude_md_declares_mode(self):
         text = (PROFILES_DIR / MPS_PROFILE / "CLAUDE.md").read_text(encoding="utf-8")

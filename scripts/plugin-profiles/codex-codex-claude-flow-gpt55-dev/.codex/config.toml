@@ -18,4 +18,4 @@ max_depth = 1
 # 启动后建议顺序：
 #   1. 读取项目根 AGENTS.md
 #   2. 任务匹配时读取 .codex/skills、.codex/agents/worker-codex.toml 或 .codex/agents/review-codex.toml
-#   3. 再按 AGENTS.md 指向读取 OpenSpec、graphify 或源码上下文
+#   3. 再按 AGENTS.md 指向读取 OpenSpec 或源码上下文

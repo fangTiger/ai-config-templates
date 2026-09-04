@@ -1,12 +1,11 @@
 # AI Config Templates
 
-> 一套可切换的 AI 编码工作流脚手架：OpenSpec 规范驱动 + Graphify 代码图谱 + Claude/Codex/Gemini 协作。
+> 一套可切换的 AI 编码工作流脚手架：OpenSpec 规范驱动 + Claude/Codex/Gemini 协作。
 
 把一套经过打磨的 AI 编码规则，一条命令装进任何项目；再用一条命令在不同「协作模式」之间切换。
 
 - **规范驱动**：所有非平凡变更先写 OpenSpec 提案，`openspec/specs/` 是系统能力的唯一真相
 - **模式可切换**：Claude 全包、Claude 设计+Codex 实现、Codex 全包……换模式只换项目级配置
-- **代码图谱**：Graphify hook 在改代码前自动提供结构和影响面
 
 ---
 
@@ -23,9 +22,6 @@ git clone <repo-url> ~/aicoding/ai-config-templates
 # 3. 进目标项目，装项目级配置
 cd /path/to/your-project
 ~/aicoding/ai-config-templates/v2/setup-project.sh
-
-# 4. 可选：装 Graphify 并首次建图
-pip install graphifyy && graphify install
 ```
 
 第 3 步默认装 `superpowers` 模式。想直接装成别的模式，加 `--mode=`：
@@ -59,6 +55,29 @@ Claude 主导；入口是 `AGENTS.md` 的是 Codex 主工作台，切过去会**
 | `ecc` | `CLAUDE.md` | Claude | Everything Claude Code |
 | `omc` | `CLAUDE.md` | Claude | Oh My ClaudeCode |
 | `teams` | `CLAUDE.md` | Claude | Superpowers Teams |
+
+### 每个模式需要装什么插件
+
+**插件不是必须全装**——只装你实际会用的模式所需的那个。切换 profile 时会自动开关
+`enabledPlugins`，但**插件本身得先装到 Claude Code 里**，否则切过去是空的。
+
+| 你要用的模式 | 需要预先安装 | 安装命令 |
+|---|---|---|
+| `superpowers`、`teams`、`codex-dev` | Superpowers | `claude plugin marketplace add obra/superpowers-marketplace` |
+| `mps`、`codex-mps-dev`、`codex-codex-mps-dev` | mattpocock-skills | `claude plugin marketplace add mattpocock/skills` |
+| `ecc` | Everything Claude Code | 见该插件仓库 |
+| `omc` | Oh My ClaudeCode | 见该插件仓库 |
+| `codex-codex-*`（非 mps） | **无需任何 Claude 插件** | — |
+
+两条要点：
+
+- **只用 mps 系列的话，Superpowers 完全不用装。** mps 模式会主动关闭 superpowers——两者的
+  `tdd`/`code-review`/`diagnosing-bugs`/`domain-modeling` 与 superpowers 的四个同职责技能
+  会互相争抢触发。
+- **`codex-codex-*` 模式下 Claude 不参与**（入口是 `AGENTS.md`），所以任何 Claude 插件在那里
+  都不生效。这些 profile 的 `settings.json` 里仍保留着插件开关，纯属历史遗留，不影响使用。
+
+---
 
 Codex 主工作台还有几个按模型路由区分的变体：
 
@@ -113,7 +132,7 @@ cd /path/to/your-project
 [mattpocock/skills](https://github.com/mattpocock/skills)。三个变体的区别只在**谁写代码**：
 `mps`（Claude）、`codex-mps-dev`（Codex 后端 + Gemini 前端）、`codex-codex-mps-dev`（Codex 全包）。
 
-首次使用要注册 marketplace：
+首次使用要注册 marketplace（见上方插件对照表）：
 
 ```bash
 claude plugin marketplace add mattpocock/skills
@@ -130,8 +149,6 @@ claude plugin marketplace add mattpocock/skills
 
 其余要点：
 
-- 本模式**关闭 superpowers 插件**——`tdd`/`code-review`/`diagnosing-bugs`/`domain-modeling`
-  和 superpowers 的四个同职责技能会互相争抢触发
 - 依赖 `mattpocock-skills@mattpocock`，**pin 1.2.3**；上游升级后需重跑验收
 - 已配 `deny` 规则拦截 `gh issue`/`gh secret`/`git push` 等外部写操作
 - 领域术语表维护在项目根 `CONTEXT.md`
@@ -181,16 +198,6 @@ OpenSpec 命令在所有模式下通用：
 
 ---
 
-## Graphify
-
-代码图谱。可用时在改代码前自动提供结构和影响面上下文，不可用时记录降级原因并继续，不阻断任务。
-
-```bash
-pip install graphifyy && graphify install
-/graphify .                      # 项目首次建图
-```
-
-安装脚本会把 hook 装到 Claude 和 Codex 两侧。维护细节见 `docs/graphify-integration.md`。
 
 ---
 
@@ -204,7 +211,7 @@ pip install graphifyy && graphify install
 | `gemini-cli` | `npx -y gemini-mcp-tool` |
 | `opencode` | `npx -y opencode-mcp` |
 
-项目初始化时会把 `.mcp.json`、`opencode.json`、`AGENTS.md` 和 OpenCode graphify 插件模板一并复制过去。
+项目初始化时会把 `.mcp.json`、`opencode.json` 和 `AGENTS.md` 一并复制到目标项目。
 
 ---
 
@@ -238,7 +245,6 @@ ai-config-templates/
 │   ├── setup-global.sh              # 全局配置初始化
 │   ├── setup-project.sh             # 项目配置初始化
 │   ├── global/                      # 全局 CLAUDE.md / AGENTS.md
-│   ├── graphifyignore.template
 │   └── scripts/
 │       ├── switch-plugin.sh         # 模式切换器
 │       └── plugin-profiles/
@@ -248,7 +254,6 @@ ai-config-templates/
 │           └── ...
 ├── openspec/                        # 本仓库自身的 OpenSpec 规范与变更历史
 ├── tests/                           # 切换器与模板的回归测试
-├── docs/graphify-integration.md
 ├── CONTEXT.md                       # 本仓库的领域术语表
 ├── AGENTS.md                        # OpenCode/Codex 项目指令模板
 ├── settings.json                    # Claude Code settings 模板

@@ -9,7 +9,7 @@ developer_instructions = """
 
 职责：
 - 只执行 Architecture Codex 已批准的 Handoff Task Package 或明确授权的小范围实现任务。
-- 严格遵守 Editable files、Forbidden files、Validation、Stop conditions、Graphify context 和 GitBaseline。
+- 严格遵守 Editable files、Forbidden files、Validation、Stop conditions 和 GitBaseline。
 - 按 TDD RED-GREEN-REFACTOR 推进；若配置/模板变更无法形成传统 RED，必须提供等价的失败验证和最终回归验证。
 - 不扩大需求，不修改未授权文件，不跳过安全边界。
 

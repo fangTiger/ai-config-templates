@@ -47,7 +47,6 @@
 4. `openspec/config.yaml`、`openspec/changes/`、`openspec/specs/`。
 5. `CODE_WIKI.md`、`docs/guide/*`、`docs/domain/*`、`docs/reference/*`，如目标项目提供。
 6. 相关源码、测试、配置、脚本、日志和命令输出。
-7. Graphify context：可用图谱查询结果、`graphify-out/GRAPH_REPORT.md` 降级依据，或明确的无图谱/不可用记录。
 8. 官方或上游资料，仅在用户要求、当前事实可能过期，或本地资料不足以判断时查阅；涉及 OpenAI / Codex 时只使用 OpenAI 官方文档。
 
 缺失的可选资料只能记录为降级原因，不得阻断任务。上下文发生冲突时，以更高优先级、更新、更接近目标项目的资料为准；仍无法判断且会影响实现边界时，停止并请求确认。
@@ -56,13 +55,6 @@
 
 ---
 
-## 3. Graphify 工作流（强制）
-
-Graphify 规则继承全局配置。本 profile 只增加 claude-flow 交接与审查证据要求：
-
-- Clarify Gate、Handoff Task Package、Review Input 和最终交付必须包含 Graphify context 或降级依据。
-- Graphify 缺失不得阻断任务，但必须记录不可用原因。
-- Implementation Codex 不得把缺失的 Graphify context 当作扩大范围的理由。
 
 ---
 
@@ -75,7 +67,7 @@ Graphify 规则继承全局配置。本 profile 只增加 claude-flow 交接与�
 - Acceptance criteria。
 - Out-of-scope。
 - OpenSpec 判断和理由。
-- Graphify context 或降级依据。
+- 。
 - 每个 task 的 Executor：Architecture Codex、Implementation Codex、Review Codex 或人工负责人。
 - Validation 命令。
 - Stop conditions。
@@ -100,13 +92,13 @@ Graphify 规则继承全局配置。本 profile 只增加 claude-flow 交接与�
 
 ## 6. 六阶段流水线
 
-六阶段名称保留，执行细则继承全局 OpenSpec、TDD、Graphify 和验证规则。本 profile 只规定角色分工、交接产物和 gate。
+六阶段名称保留，执行细则继承全局 OpenSpec、TDD 和验证规则。本 profile 只规定角色分工、交接产物和 gate。
 
 | Stage | Owner | Output / Gate |
 | --- | --- | --- |
-| ANALYZE | Architecture Codex | 明确 dirty baseline、Graphify context / 降级依据、OpenSpec 判断、Executor、验证和 stop conditions；关键边界不清楚则停在本阶段。 |
+| ANALYZE | Architecture Codex | 明确 dirty baseline、OpenSpec 判断、Executor、验证和 stop conditions；关键边界不清楚则停在本阶段。 |
 | DESIGN | Architecture Codex | 形成轻量计划或 OpenSpec proposal / design / tasks；中 / 大任务拆成可交接 slice，公共契约先由单一 owner 固化。 |
-| HANDOFF | Architecture Codex -> Implementation Codex | Handoff Task Package 包含 ChangeId / TaskId、Executor、验收与排除项、Editable / Forbidden files、Validation、Stop conditions、Graphify context、GitBaseline、SessionStatePath、PreExistingDirtyBaseline、交付 artifact / worktree 和 IntegrationOwner。 |
+| HANDOFF | Architecture Codex -> Implementation Codex | Handoff Task Package 包含 ChangeId / TaskId、Executor、验收与排除项、Editable / Forbidden files、Validation、Stop conditions、GitBaseline、SessionStatePath、PreExistingDirtyBaseline、交付 artifact / worktree 和 IntegrationOwner。 |
 | IMPLEMENT | Implementation Codex | 按任务包 RED-GREEN-REFACTOR；提交 changed files、验证输出、需求覆盖、未验证项和范围扩展请求。Architecture Codex 检查 allowlist、status、dirty baseline 和 session-state。 |
 | REVIEW | Review Codex | Review Input = Handoff Task Package + Implementation Evidence + diff / status + spec/design/tasks 或 NO_OPENSPEC 理由 + 验证输出；只输出 PASS、FIX_REQUIRED 或 DOWNGRADE。 |
 | VERIFY | Architecture Codex | 消费 `runtime-verification-summary.sh` / PostToolUse tracker（不可用则记录 degraded），运行 fresh verification，确认 tasks / Review Decision / 归档要求，更新或归档 session-state，并按全局交付清单收口。 |

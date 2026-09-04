@@ -7,11 +7,9 @@ import tomllib
 import unittest
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 GPT55_PROFILE = "codex-codex-claude-flow-gpt55-dev"
 GPT56_SOL_PROFILE = "codex-codex-claude-flow-gpt56-sol-dev"
-
 
 def run_cmd(args, cwd, env):
     return subprocess.run(
@@ -25,7 +23,6 @@ def run_cmd(args, cwd, env):
         stderr=subprocess.PIPE,
         timeout=30,
     )
-
 
 def make_env(tmp_path):
     home = tmp_path / "home"
@@ -46,7 +43,6 @@ def make_env(tmp_path):
     env["PATH"] = f"{bin_dir}{os.pathsep}{env.get('PATH', '')}"
     return env
 
-
 def install_mock_claude(env):
     bin_dir = Path(env["PATH"].split(os.pathsep)[0])
     claude = bin_dir / "claude"
@@ -60,7 +56,6 @@ def install_mock_claude(env):
     )
     claude.chmod(0o755)
 
-
 def make_v2_project(tmp_path, env, mode="codex-dev"):
     project = tmp_path / "project"
     project.mkdir()
@@ -72,19 +67,15 @@ def make_v2_project(tmp_path, env, mode="codex-dev"):
     assert result.returncode == 0, result.stdout + result.stderr
     return project
 
-
 def read_project_manifest(project):
     return json.loads((project / ".claude" / ".harness-manifest.json").read_text(encoding="utf-8"))
-
 
 def read_toml(path):
     with path.open("rb") as handle:
         return tomllib.load(handle)
 
-
 def short_file_hash(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()[:12]
-
 
 def embedded_python_from_shell_tool(path):
     text = path.read_text(encoding="utf-8")
@@ -92,7 +83,6 @@ def embedded_python_from_shell_tool(path):
     start = text.index(marker) + len(marker)
     end = text.rindex("\nPY")
     return text[start:end]
-
 
 def profile_agents_text(profile):
     return (
@@ -103,7 +93,6 @@ def profile_agents_text(profile):
         / profile
         / "AGENTS.md"
     ).read_text(encoding="utf-8")
-
 
 class V2CodexProfileTests(unittest.TestCase):
     def setUp(self):
@@ -217,12 +206,10 @@ class V2CodexProfileTests(unittest.TestCase):
         self.assertTrue((project / ".codex" / "agents" / "worker-codex.toml").is_file())
         self.assertTrue((project / ".codex" / "agents" / "review-codex.toml").is_file())
         self.assertTrue((project / ".codex" / "hooks.json").is_file())
-        self.assertTrue((project / ".codex" / "hooks" / "graphify-query-hook.sh").is_file())
         self.assertTrue((project / ".codex" / "hooks" / "post-tool-use-tracker.sh").is_file())
         self.assertTrue((project / ".codex" / "hooks" / "skill-activation-prompt.sh").is_file())
         self.assertTrue((project / ".codex" / "hooks" / "skill-activation-prompt.cjs").is_file())
         self.assertTrue((project / ".codex" / "tools" / "runtime-verification-summary.sh").is_file())
-        self.assertTrue((project / ".codex" / "tools" / "graphify-java-project.sh").is_file())
         self.assertTrue((project / ".codex" / "session-state.md").is_file())
         self.assertTrue((project / ".codex" / "session-state.template.md").is_file())
         self.assertEqual(read_project_manifest(project)["mode"], GPT55_PROFILE)
@@ -233,7 +220,6 @@ class V2CodexProfileTests(unittest.TestCase):
         self.assertTrue((project / "AGENTS.md").is_file())
         self.assertTrue((project / ".codex" / "hooks.json").is_file())
         self.assertTrue((project / ".codex" / "tools" / "runtime-verification-summary.sh").is_file())
-        self.assertTrue((project / ".codex" / "tools" / "graphify-java-project.sh").is_file())
         self.assertTrue((project / ".codex" / "skills" / "codex-orchestrate" / "SKILL.md").is_file())
         self.assert_gpt56_routing(project / ".codex")
         self.assertEqual(read_project_manifest(project)["mode"], GPT56_SOL_PROFILE)
@@ -336,50 +322,24 @@ class V2CodexProfileTests(unittest.TestCase):
         self.assertEqual((worker["model"], worker["model_reasoning_effort"]), ("gpt-5.4", "xhigh"))
         self.assertEqual((review["model"], review["model_reasoning_effort"]), ("gpt-5.4", "xhigh"))
 
-    def test_shared_graphify_java_tool_embedded_python_is_valid(self):
-        tool = (
-            REPO_ROOT
-            / "v2"
-            / "scripts"
-            / "plugin-profiles"
-            / "shared"
-            / "codex"
-            / "java"
-            / "tools"
-            / "graphify-java-project.sh"
-        )
-
-        compile(embedded_python_from_shell_tool(tool), str(tool), "exec")
-
     def test_v2_setup_installs_shared_codex_assets_before_profile_overrides(self):
         shared_codex = REPO_ROOT / "v2" / "scripts" / "plugin-profiles" / "shared" / "codex"
-        shared_graphify_tool = shared_codex / "java" / "tools" / "graphify-java-project.sh"
         shared_runtime_summary = shared_codex / "tools" / "runtime-verification-summary.sh"
-        shared_graphify_hook = shared_codex / "hooks" / "graphify-query-hook.sh"
         shared_orchestrate_skill = shared_codex / "skills" / "codex-orchestrate" / "SKILL.md"
 
-        self.assertTrue(shared_graphify_tool.is_file())
         self.assertTrue(shared_runtime_summary.is_file())
-        self.assertTrue(shared_graphify_hook.is_file())
         self.assertTrue(shared_orchestrate_skill.is_file())
 
         project = make_v2_project(self.tmp_path, self.env, mode="codex-codex-claude-flow-gpt55-dev")
 
-        installed_graphify_tool = project / ".codex" / "tools" / "graphify-java-project.sh"
         installed_orchestrate_skill = project / ".codex" / "skills" / "codex-orchestrate" / "SKILL.md"
-        self.assertEqual(
-            shared_graphify_tool.read_text(encoding="utf-8"),
-            installed_graphify_tool.read_text(encoding="utf-8"),
-        )
         self.assertEqual(
             shared_orchestrate_skill.read_text(encoding="utf-8"),
             installed_orchestrate_skill.read_text(encoding="utf-8"),
         )
-        compile(embedded_python_from_shell_tool(installed_graphify_tool), str(installed_graphify_tool), "exec")
 
     def test_v2_switch_installs_shared_codex_assets_before_profile_overrides(self):
         shared_codex = REPO_ROOT / "v2" / "scripts" / "plugin-profiles" / "shared" / "codex"
-        shared_graphify_tool = shared_codex / "java" / "tools" / "graphify-java-project.sh"
         shared_orchestrate_skill = shared_codex / "skills" / "codex-orchestrate" / "SKILL.md"
         project = make_v2_project(self.tmp_path, self.env)
 
@@ -390,10 +350,6 @@ class V2CodexProfileTests(unittest.TestCase):
         )
 
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(
-            shared_graphify_tool.read_text(encoding="utf-8"),
-            (project / ".codex" / "tools" / "graphify-java-project.sh").read_text(encoding="utf-8"),
-        )
         self.assertEqual(
             shared_orchestrate_skill.read_text(encoding="utf-8"),
             (project / ".codex" / "skills" / "codex-orchestrate" / "SKILL.md").read_text(encoding="utf-8"),
@@ -460,23 +416,6 @@ class V2CodexProfileTests(unittest.TestCase):
                     self.assertNotIn(rule, text)
                 self.assertIn("实现者委托", text)
                 self.assertIn("审查独立", text)
-
-    def test_claude_flow_agents_use_compact_graphify_overlay(self):
-        detailed_global_graphify_phrases = [
-            'graphify query "<module/file> architecture dependencies"',
-            'graphify query "<module/file> impact callers tests dependencies"',
-            "如果 graphify CLI / MCP 不可用",
-            "不得把 graphify 结果当作唯一依据",
-        ]
-
-        for profile in ("codex-codex-claude-flow-dev", GPT55_PROFILE, GPT56_SOL_PROFILE):
-            with self.subTest(profile=profile):
-                text = profile_agents_text(profile)
-                for phrase in detailed_global_graphify_phrases:
-                    self.assertNotIn(phrase, text)
-                self.assertIn("Handoff Task Package", text)
-                self.assertIn("Review Input", text)
-                self.assertIn("最终交付", text)
 
     def test_claude_flow_agents_use_compact_pipeline_and_delivery_overlay(self):
         repeated_pipeline_sections = [
@@ -619,7 +558,6 @@ class V2CodexProfileTests(unittest.TestCase):
         self.assertTrue((project / "CLAUDE.md").is_file())
         self.assertFalse((project / ".codex" / "agents" / "worker-codex.toml").exists())
         self.assertEqual(read_project_manifest(project)["mode"], "superpowers")
-
 
 if __name__ == "__main__":
     unittest.main()

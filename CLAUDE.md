@@ -18,15 +18,6 @@
 
 ---
 
-## Graphify 工作流（强制）
-
-如果项目下存在 `graphify-out/graph.json`，在非平凡搜索或改代码前，必须先用 `graphify` 检查当前结构和影响范围。
-- 结构检索：`graphify query "<module/file> architecture dependencies"`
-- 影响检查：`graphify query "<module/file> impact callers tests dependencies"`
-- `graphify` 不可用时自动降级为阅读 `graphify-out/GRAPH_REPORT.md` 或继续原流程，禁止因为 graphify 失败阻断任务。
-
----
-
 ## 1. OpenSpec 自动工作流 (强制)
 
 **核心原则：规范先行，实现在后。**

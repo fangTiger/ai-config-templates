@@ -276,32 +276,6 @@ copy_session_state() {
     cp "$target_template" "$target_state"
 }
 
-ensure_graphify_assets() {
-    if [[ ! -f "$CODEX_DIR/hooks.json" ]]; then
-        cat > "$CODEX_DIR/hooks.json" <<'HOOKSEOF'
-{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash|Read|Grep|Glob|Edit|MultiEdit|Write|NotebookEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .codex/hooks/graphify-query-hook.sh"
-          }
-        ]
-      }
-    ]
-  }
-}
-HOOKSEOF
-    fi
-
-    if [[ ! -f "$PROJECT_DIR/.graphifyignore" && -f "$TEMPLATE_DIR/graphifyignore.template" ]]; then
-        cp "$TEMPLATE_DIR/graphifyignore.template" "$PROJECT_DIR/.graphifyignore"
-    fi
-}
-
 install_hook_dependencies() {
     if [[ -f "$CODEX_DIR/hooks/package.json" ]]; then
         echo -e "${BLUE}安装 hooks 依赖...${NC}"
@@ -330,7 +304,6 @@ validate_layout() {
     validate_session_state_file "$CODEX_DIR/session-state.md" || ok=false
     validate_session_state_template_fields "$CODEX_DIR/session-state.md" "$CODEX_DIR/session-state.template.md" || ok=false
     [[ -f "$CODEX_DIR/hooks.json" ]] || ok=false
-    [[ -f "$CODEX_DIR/hooks/graphify-query-hook.sh" ]] || ok=false
     [[ -f "$CODEX_DIR/hooks/post-tool-use-tracker.sh" ]] || ok=false
     [[ -f "$CODEX_DIR/hooks/skill-activation-prompt.sh" ]] || ok=false
     [[ -f "$CODEX_DIR/hooks/skill-activation-prompt.cjs" ]] || ok=false
@@ -338,26 +311,21 @@ validate_layout() {
     [[ -f "$CODEX_DIR/tools/README.md" ]] || ok=false
     if [[ "$PROFILE_NAME" == "codex-codex-dev" ]]; then
         [[ -f "$CODEX_DIR/agents/review-codex.toml" ]] || ok=false
-        [[ -f "$CODEX_DIR/tools/graphify-java-project.sh" ]] || ok=false
     elif [[ "$PROFILE_NAME" == "codex-codex-claude-flow-dev" ]]; then
         [[ -f "$CODEX_DIR/agents/review-codex.toml" ]] || ok=false
-        [[ -f "$CODEX_DIR/tools/graphify-java-project.sh" ]] || ok=false
     elif [[ "$PROFILE_NAME" == "codex-codex-claude-flow-gpt55-dev" || "$PROFILE_NAME" == "codex-codex-claude-flow-gpt56-sol-dev" ]]; then
         [[ -f "$CODEX_DIR/agents/worker-codex.toml" ]] || ok=false
         [[ -f "$CODEX_DIR/agents/review-codex.toml" ]] || ok=false
-        [[ -f "$CODEX_DIR/tools/graphify-java-project.sh" ]] || ok=false
     elif [[ "$PROFILE_NAME" == "codex-codex-python-dev" ]]; then
         [[ -f "$CODEX_DIR/agents/worker-codex.toml" ]] || ok=false
         [[ -f "$CODEX_DIR/agents/review-codex.toml" ]] || ok=false
         [[ -f "$CODEX_DIR/tools/detect-python-project.sh" ]] || ok=false
         [[ -f "$CODEX_DIR/tools/verify-python-project.sh" ]] || ok=false
-        [[ -f "$CODEX_DIR/tools/graphify-python-project.sh" ]] || ok=false
         [[ -f "$CODEX_DIR/skills/codex-python-bootstrap/SKILL.md" ]] || ok=false
         [[ -f "$CODEX_DIR/skills/codex-python-project/SKILL.md" ]] || ok=false
         [[ -f "$CODEX_DIR/skills/codex-python-testing/SKILL.md" ]] || ok=false
         [[ -f "$CODEX_DIR/skills/codex-python-security/SKILL.md" ]] || ok=false
     fi
-    [[ -f "$PROJECT_DIR/.graphifyignore" ]] || ok=false
     [[ -d "$CODEX_DIR/hooks" ]] || ok=false
     [[ -d "$CODEX_DIR/commands/openspec" ]] || ok=false
     [[ -d "$CODEX_DIR/skills" ]] || ok=false
@@ -398,7 +366,6 @@ switch_profile() {
     clean_target_dirs
     copy_project_files
     copy_session_state
-    ensure_graphify_assets
     write_active_profile
     install_hook_dependencies
     validate_layout

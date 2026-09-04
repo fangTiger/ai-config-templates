@@ -16,35 +16,13 @@
 
 ---
 
-## 1. Graphify 工作流（OpenCode 增强版）
 
 ### 1.1 核心原则
 
-如果项目下存在 `graphify-out/graph.json`，在非平凡搜索或改代码前，**必须**先检查当前结构和影响范围。
-- `graphify` 不可用时降级为阅读 `graphify-out/GRAPH_REPORT.md` 或继续原流程，禁止因 graphify 失败阻断任务。
-
-### 1.2 OpenCode 环境下的 Graphify 使用策略
-
-OpenCode 没有 Claude Code 的 Hook 自动触发机制，因此 AI 代理必须**主动**遵循以下规则：
-
-**搜索前（Grep/Glob/read/explore 前）：**
-1. 如果存在 `graphify-out/graph.json`，优先使用 MCP 工具 `graphify_query` 进行结构化查询
-2. 查询格式：`graphify_query(query="<模块/文件> architecture dependencies")`
-3. 没有图谱时才降级为广泛文件搜索
-
-**修改代码前（Edit/Write 前）：**
-1. 必须先用 `graphify_query(query="<目标文件> impact callers tests dependencies")` 检查影响范围
-2. 了解调用链、依赖关系和受影响的测试后再动手
-3. 没有图谱时降级为阅读 `graphify-out/GRAPH_REPORT.md`
-
-**首次使用：**
-1. 项目内没有 `graphify-out/` 时，提示用户运行 `/graphify .` 建图
-2. 或使用 MCP 工具 `graphify_build` 触发建图
 
 ### 1.3 降级策略（强制）
 
 ```
-graphify 可用？→ 用 graphify_query 获取上下文
   ↓ 否
 GRAPH_REPORT.md 存在？→ 阅读报告获取结构概览
   ↓ 否
@@ -55,9 +33,6 @@ GRAPH_REPORT.md 存在？→ 阅读报告获取结构概览
 
 | 工具 | 用途 | 参数 |
 |------|------|------|
-| `graphify_query` | 执行图谱查询 | `query`: 查询字符串, `budget`: 结果预算（默认 1500） |
-| `graphify_status` | 检查 graphify 状态 | 无参数 |
-| `graphify_build` | 触发项目建图 | `path`: 项目路径（默认 "."） |
 
 ---
 
@@ -178,14 +153,8 @@ tests/                      # 测试目录
 
 **tasks.md：** 使用 `- [ ]` 清单格式，实现完成后标记 `- [x]`。
 
-## graphify
-
-This project has a graphify knowledge graph at graphify-out/.
 
 Rules:
-- Before answering architecture or codebase questions, read graphify-out/GRAPH_REPORT.md for god nodes and community structure
-- If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
-- After modifying code files in this session, run `python3 -c "from graphify.watch import _rebuild_code; from pathlib import Path; _rebuild_code(Path('.'))"` to keep the graph current
 
 ---
 

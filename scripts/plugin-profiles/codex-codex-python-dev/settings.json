@@ -26,17 +26,6 @@
     "defaultMode": "acceptEdits"
   },
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Edit|MultiEdit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash $CLAUDE_PROJECT_DIR/.codex/hooks/graphify-query-hook.sh"
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
       {
         "matcher": "Edit|MultiEdit|Write",
