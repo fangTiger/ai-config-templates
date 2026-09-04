@@ -3,7 +3,9 @@
     "codex": {
       "type": "stdio",
       "command": "codex",
-      "args": ["mcp-server"],
+      "args": [
+        "mcp-server"
+      ],
       "env": {}
     },
     "gemini-cli": {
@@ -12,15 +14,6 @@
       "args": [
         "-y",
         "gemini-mcp-tool"
-      ],
-      "env": {}
-    },
-    "opencode": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "opencode-mcp"
       ],
       "env": {}
     }

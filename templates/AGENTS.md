@@ -1,6 +1,7 @@
-# OpenCode 项目指令
+# 项目指令 (AGENTS.md)
 
-> 此文件为 OpenCode 的项目级指令。全局强制：所有回复语种为中文。
+> 此文件为读取 `AGENTS.md` 的 agent（Codex CLI 等）提供项目级指令。
+> 全局强制：所有回复语种为中文。
 
 ---
 

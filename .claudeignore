@@ -36,9 +36,6 @@ Thumbs.db
 *.log
 log/
 
-# OpenCode 内部目录
-.opencode/
-
 # 备份文件
 *.bak
 *.backup

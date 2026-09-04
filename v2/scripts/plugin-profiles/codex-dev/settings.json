@@ -18,8 +18,7 @@
       "NotebookEdit:*",
       "Bash:*",
       "mcp__codex__*",
-      "mcp__gemini-cli__*",
-      "mcp__opencode__*"
+      "mcp__gemini-cli__*"
     ],
     "deny": [
       "Bash(git push --force:*)",

@@ -19,7 +19,6 @@
       "NotebookEdit:*",
       "Bash:*",
       "mcp__codex__*",
-      "mcp__opencode__*",
       "mcp__gemini-cli__*"
     ],
     "defaultMode": "acceptEdits",

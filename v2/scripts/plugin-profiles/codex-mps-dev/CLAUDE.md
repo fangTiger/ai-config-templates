@@ -294,11 +294,6 @@ sandbox: "workspace-write"（实现阶段）/ "read-only"（复审阶段）
 规范: 不指定 model 参数
 ```
 
-### 10.3 OpenCode MCP
-
-```
-规范: 不指定 providerID 和 modelID，使用 OpenCode 自身默认模型
-```
 
 ---
 

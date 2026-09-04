@@ -514,15 +514,7 @@ Ralph 循环：
 - 将 Gemini 视为只读分析师 + 前端代码主要实现者
 - 实现和最终决策由 Claude（和 Codex）完成
 
-### OpenCode MCP（自主编码代理）
 
-```
-工具名: opencode (opencode_ask / opencode_run / opencode_reply 等)
-规范: 不指定 providerID 和 modelID 参数，使用 OpenCode 自身配置的默认模型
-用途: 自主编码代理，支持 114+ provider，可构建、编辑和调试项目
-调用示例: opencode_run(directory=项目路径, prompt=任务指令)
-禁止: 调用时手动指定 providerID 或 modelID，必须使用默认模型
-```
 ### OMC 模式与 MCP 工具协作表
 
 | OMC 模式 | Codex 用法 | Gemini 用法 |

@@ -9,7 +9,6 @@
       "Bash:*",
       "mcp__codex__*",
       "mcp__gemini-cli__*",
-      "mcp__opencode__*",
       "mcp__plugin_claude-mem_mem-search__*",
       "mcp__plugin_pinecone_pinecone__*"
     ],

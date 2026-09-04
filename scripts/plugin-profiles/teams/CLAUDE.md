@@ -378,15 +378,7 @@ tests/
 每阶段交叉检查时由 Team Lead 调用
 ```
 
-### 9.3 OpenCode MCP
 
-```
-工具名: opencode (opencode_ask / opencode_run / opencode_reply 等)
-规范: 不指定 providerID 和 modelID 参数，使用 OpenCode 自身配置的默认模型
-用途: 自主编码代理，支持 114+ provider，可构建、编辑和调试项目
-调用示例: opencode_run(directory=项目路径, prompt=任务指令)
-禁止: 调用时手动指定 providerID 或 modelID，必须使用默认模型
-```
 ---
 
 ## 10. 态度与原则

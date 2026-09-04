@@ -245,7 +245,6 @@ echo ""
 echo -e "${CYAN}  Step 1: 目录结构${NC}"
 mkdir -p "$CLAUDE_DIR"/{skills,hooks,agents,commands,rules}
 mkdir -p "$CODEX_DIR"/{hooks,skills}
-mkdir -p "$TARGET_DIR/.opencode/plugins"
 print_success "目录结构已创建"
 
 # ═══════════════════════════════════════════════
@@ -397,7 +396,7 @@ fi
 # ═══════════════════════════════════════════════
 echo -e "${CYAN}  Step 6: MCP 工具（可选）${NC}"
 if [ -f "$V1_TEMPLATE_DIR/.mcp.json" ] && [ ! -f "$TARGET_DIR/.mcp.json" ]; then
-    prompt_read "安装 MCP 工具 (Codex + Gemini + OpenCode)? (y/n): " install_mcp
+    prompt_read "安装 MCP 工具 (Codex + Gemini)? (y/n): " install_mcp
     if [ "$install_mcp" = "y" ] || [ "$install_mcp" = "Y" ]; then
         cp "$V1_TEMPLATE_DIR/.mcp.json" "$TARGET_DIR/.mcp.json"
         print_success "MCP 配置已安装"
@@ -406,13 +405,6 @@ elif [ -f "$TARGET_DIR/.mcp.json" ]; then
     print_info ".mcp.json 已存在，跳过"
 fi
 
-# OpenCode 项目配置
-if [ -f "$V1_TEMPLATE_DIR/templates/opencode.json" ] && [ ! -f "$TARGET_DIR/opencode.json" ]; then
-    cp "$V1_TEMPLATE_DIR/templates/opencode.json" "$TARGET_DIR/opencode.json"
-    print_success "opencode.json 已安装"
-elif [ -f "$TARGET_DIR/opencode.json" ]; then
-    print_info "opencode.json 已存在，跳过"
-fi
 if [ -f "$V1_TEMPLATE_DIR/templates/AGENTS.md" ] && [ ! -f "$TARGET_DIR/AGENTS.md" ]; then
     cp "$V1_TEMPLATE_DIR/templates/AGENTS.md" "$TARGET_DIR/AGENTS.md"
     print_success "AGENTS.md 已安装"

@@ -11,35 +11,87 @@
 
 ## 安装
 
+分两层，**顺序不能反**：全局装一次，然后每个项目各装一次。
+
+### 第 1 步：克隆仓库（每台机器一次）
+
 ```bash
-# 1. 克隆到独立工具目录（不要放进 ~/.claude 这类运行态目录）
+# 放进独立工具目录，不要放进 ~/.claude 这类运行态目录
 mkdir -p ~/aicoding
 git clone <repo-url> ~/aicoding/ai-config-templates
+```
 
-# 2. 装全局配置（写入 ~/.claude/CLAUDE.md 和 ~/.codex/AGENTS.md）
+> 下文所有命令里的 `~/aicoding/ai-config-templates` 都是这里克隆的路径，按你的实际位置替换。
+> **务必用完整路径**——脚本靠自身位置定位模板，路径写错会装到错误的副本上。
+
+### 第 2 步：装全局配置（每台机器一次）
+
+```bash
 ~/aicoding/ai-config-templates/v2/setup-global.sh
+```
 
-# 3. 进目标项目，装项目级配置
-cd /path/to/your-project
+写入 `~/.claude/CLAUDE.md`、`~/.codex/AGENTS.md`，以及全局标记
+`~/.claude/.harness-manifest.json`。**后面每一步都要读这个标记文件**，所以这步不能跳。
+
+### 第 3 步：初始化项目（每个项目一次）
+
+```bash
+cd /path/to/your-project      # 必须在项目根目录
 ~/aicoding/ai-config-templates/v2/setup-project.sh
 ```
 
-第 3 步默认装 `superpowers` 模式。想直接装成别的模式，加 `--mode=`：
+写入项目的 `.claude/`、`.codex/`、`CLAUDE.md` 和项目标记
+`.claude/.harness-manifest.json`。**没做这步就不能切换模式。**
+
+默认装 `superpowers`。想一步到位装成别的模式，加 `--mode=`：
 
 ```bash
-# Claude 侧
+# mattpocock 工作流（推荐）
 ~/aicoding/ai-config-templates/v2/setup-project.sh --mode=mps
+~/aicoding/ai-config-templates/v2/setup-project.sh --mode=codex-mps-dev
+~/aicoding/ai-config-templates/v2/setup-project.sh --mode=codex-codex-mps-dev
 
-# Codex 主用
+# Codex 主工作台，按模型路由选（详见下方「模式一览」）
 ~/aicoding/ai-config-templates/v2/setup-project.sh --mode=codex-codex-claude-flow-gpt55-dev
 ~/aicoding/ai-config-templates/v2/setup-project.sh --mode=codex-codex-claude-flow-gpt56-sol-dev
 ```
 
-> 下文所有命令里的 `~/aicoding/ai-config-templates` 都是你第 1 步克隆的路径，按实际情况替换。
+带了 `--mode=` 就不用再单独执行切换命令。全部可选模式见下方[模式一览](#模式一览)。
+
+### 第 4 步：装模式对应的插件
+
+看下方[插件对照表](#每个模式需要装什么插件)——**只装你实际会用的那个**，不用全装。
+
+### 装完检查
+
+```bash
+ls ~/.claude/.harness-manifest.json          # 第 2 步的产物
+ls /path/to/your-project/.claude/.harness-manifest.json   # 第 3 步的产物
+```
+
+两个都在，就可以切换模式了。
 
 ---
 
 ## 模式一览
+
+### 先选：你想让谁写代码
+
+| 你的场景 | 用这个 | 切换命令 |
+|---|---|---|
+| Claude 全程干活 | `mps` | `switch-plugin.sh mps` |
+| Claude 出方案、**Codex 写代码** | `codex-mps-dev` | `switch-plugin.sh codex-mps-dev` |
+| **全程在 Codex CLI 里干**，不开 Claude | `codex-codex-mps-dev` | `switch-plugin.sh codex-codex-mps-dev` |
+
+以上是 mattpocock 工作流（本仓库当前推荐）。如果你更习惯 Superpowers，把上面三个换成
+`superpowers`、`codex-dev`、`codex-codex-dev`，角色分工完全一样，只是工作流技能不同。
+
+> **`codex-dev` 和 `codex-mps-dev` 容易混。** 两个都是「Claude 设计 + Codex 实现」，
+> 唯一区别是工作流技能：前者用 `superpowers:brainstorming` → `writing-plans`，
+> 后者用 `/grill-with-docs` → `/to-spec` → `/to-tickets`。`codex-codex-dev` 与
+> `codex-codex-mps-dev` 同理。
+
+### 全部模式
 
 模式决定**谁来写代码**、**用哪套工作流技能**。按「入口文件」分两类：入口是 `CLAUDE.md` 的由
 Claude 主导；入口是 `AGENTS.md` 的是 Codex 主工作台，切过去会**删掉 `CLAUDE.md`**，Claude 不再参与。
@@ -118,11 +170,36 @@ cd /path/to/your-project
 ~/aicoding/ai-config-templates/v2/scripts/switch-plugin.sh mps --dry-run
 ```
 
-**三条通用规则：**
+**切换前必读：**
 
-1. **切换只对下一次会话生效**——切完要退出重开
-2. 切到 `codex-*` 会**删除项目根 `CLAUDE.md`**，`/switch-profile` 会强制二次确认
-3. **不能在模板仓库自己身上执行切换**（会覆盖仓库自带的模板文件），脚本会直接拒绝
+1. **切换只对下一次会话生效**——切完要退出重开对应的 CLI
+2. 切到 `codex-codex-*` 会**删除项目根 `CLAUDE.md`**（改用 `AGENTS.md`），
+   `/switch-profile` 会强制二次确认。之后要在 Codex CLI 里工作，Claude 会话不再加载项目配置
+3. **不能在模板仓库自己身上执行切换**——会覆盖仓库自带的模板文件，脚本直接拒绝
+4. **⚠️ 在两个 `codex-codex-*` 模式之间切换会重置 `.codex/session-state.md`**
+
+关于第 4 条：session-state 里记录着进行中任务的 ChangeId、当前阶段、文件白名单等。
+切换器会校验文件里的 `## Mode:` 是否匹配目标模式，不匹配就按新模板重新初始化——
+**你手工加的内容会丢**。有进行中的任务就先备份：
+
+```bash
+cp .codex/session-state.md /tmp/session-state.bak
+```
+
+同模式内重复切换（例如 `--reset-session-state` 之外的场景）会保留原内容，只有跨模式才重置。
+
+### 找不到 `switch-plugin.sh` 或报「未知 profile」
+
+如果机器上有**多个模板仓库副本**（例如一个早期部署的 + 一个最新的），旧副本可能没有你要的模式。
+`/switch-profile` 会自动在候选副本中挑有该模式的那个；用命令行时则要确保路径指向正确的副本：
+
+```bash
+# 确认某个副本有没有你要的模式
+ls <模板仓库路径>/v2/scripts/plugin-profiles/
+```
+
+切换成功后，模板路径会写回项目的 `.claude/.harness-manifest.json`，之后 `/switch-profile`
+直接命中，不用再指定。
 
 ---
 
@@ -203,36 +280,86 @@ OpenSpec 命令在所有模式下通用：
 
 ## MCP
 
-`.mcp.json` 预置三个 server：
+`.mcp.json` 预置两个 server：
 
 | 名称 | 命令 |
 |---|---|
 | `codex` | `codex mcp-server` |
 | `gemini-cli` | `npx -y gemini-mcp-tool` |
-| `opencode` | `npx -y opencode-mcp` |
 
-项目初始化时会把 `.mcp.json`、`opencode.json` 和 `AGENTS.md` 一并复制到目标项目。
+项目初始化时会把 `.mcp.json` 和 `AGENTS.md` 一并复制到目标项目。
 
 ---
 
 ## 常见问题
 
-**切换报「检测到漂移，但当前不是交互终端」（退出码 2）**
+### 报错：`错误: 全局 manifest 不存在`
+
+第 2 步没做，或者跑错了脚本。**装全局只有这一条命令**：
+
+```bash
+~/aicoding/ai-config-templates/v2/setup-global.sh
+```
+
+注意路径里的 `v2/`。仓库根目录下另有一个同名的 `setup-global.sh`，那是早期版本的遗留文件，
+**它不写 manifest**，跑了等于没跑。
+
+如果确认跑过了还报这个错，检查 `$HOME` 是不是被改了——比如用了 `sudo`，那样脚本会去
+`/var/root/.claude/` 找，当然找不到。**不要用 sudo 跑这些脚本。**
+
+```bash
+ls ~/.claude/.harness-manifest.json     # 确认全局标记存在
+```
+
+### 报错：`错误: 项目 manifest 不存在（未初始化 V2）`
+
+第 3 步没做。切换模式之前必须先初始化项目：
+
+```bash
+cd /path/to/your-project      # 必须在项目根，不能在子目录
+~/aicoding/ai-config-templates/v2/setup-project.sh
+```
+
+切换器是按**当前工作目录**判断项目的。在子目录里跑，它会去子目录找 `.claude/`，
+找不到就报这个错——即使项目根其实已经初始化过了。
+
+```bash
+ls /path/to/your-project/.claude/.harness-manifest.json   # 确认项目标记存在
+```
+
+### ⚠️ 在两个 `codex-codex-*` 模式之间切换会重置 `.codex/session-state.md`
+
+`session-state.md` 记录着进行中任务的 ChangeId、当前阶段、文件白名单等。切换器会校验文件里的
+`## Mode:` 是否匹配目标模式，**不匹配就按新模板重新初始化——你手工加的内容会丢**。
+
+手上有进行中的任务，切换前先备份：
+
+```bash
+cp .codex/session-state.md /tmp/session-state.bak
+```
+
+同一模式内重复切换会保留原内容，只有跨模式才重置。
+
+### 切换报「检测到漂移，但当前不是交互终端」（退出码 2）
 入口文件被手工改过。跑 `/setup-matt-pocock-skills` 会追加 `## Agent skills` 块，必然触发。
 先看清改了什么——确认可以丢弃就加 `--force-overwrite`，想保留就先提交或备份。
 
-**切换报「当前目录是模板仓库本身」**
+### 切换报「当前目录是模板仓库本身」
+
 你在模板仓库里执行了切换。到目标项目目录再跑。
 
-**`/switch-profile` 找不到 `switch-plugin.sh`**
-项目配置是旧版初始化的，没记录模板路径。命令会自动回退：环境变量
+### `/switch-profile` 找不到 `switch-plugin.sh`
+
+项目配置里没记录模板路径（早期版本装的）。命令会自动回退：环境变量
 `AI_CONFIG_TEMPLATES_ROOT` → 已知候选路径；机器上有多个模板副本时会挑有该模式的那个。
 **成功切换一次后路径会写回配置，之后不用再猜。**
 
-**mattpocock skill 没出现在 `/plugin` 里**
+### mattpocock skill 没出现在 `/plugin` 里
+
 marketplace 没注册，或者切换后没重启会话。
 
-**切换后感觉配置没生效**
+### 切换后感觉配置没生效
+
 切换只对下一次会话生效。退出，重开。
 
 ---
@@ -255,13 +382,9 @@ ai-config-templates/
 ├── openspec/                        # 本仓库自身的 OpenSpec 规范与变更历史
 ├── tests/                           # 切换器与模板的回归测试
 ├── CONTEXT.md                       # 本仓库的领域术语表
-├── AGENTS.md                        # OpenCode/Codex 项目指令模板
 ├── settings.json                    # Claude Code settings 模板
 └── .mcp.json                        # MCP server 模板
 ```
-
-> `scripts/`、`setup-global.sh`、`setup-claude-config.sh` 与根 `CLAUDE.md` 是旧版遗留，
-> **已停止维护**，不再接收新模式和修复。新项目不要用。
 
 ---
 

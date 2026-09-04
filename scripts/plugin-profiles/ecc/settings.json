@@ -17,8 +17,7 @@
       "MultiEdit:*",
       "NotebookEdit:*",
       "Bash:*",
-      "mcp__codex__*",
-      "mcp__opencode__*"
+      "mcp__codex__*"
     ],
     "defaultMode": "acceptEdits"
   },

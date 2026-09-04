@@ -335,7 +335,7 @@ class MpsHandoffProfileTests(unittest.TestCase):
             "<!-- harness-mode: codex-mps-dev -->",
             (project / "CLAUDE.md").read_text(encoding="utf-8"),
         )
-        # AGENTS.md 是 setup 装的 OpenCode 模板，Claude 侧 profile 间切换不动它；
+        # AGENTS.md 是 setup 装的通用模板（Codex CLI 读取），profile 间切换不动它；
         # 关键是项目未被当作 codex-native（入口仍是 CLAUDE.md）
         self.assertFalse(
             (PROFILES_DIR / MPS_HANDOFF_PROFILE / "AGENTS.md").exists(),

@@ -151,18 +151,6 @@ else
     }
 fi
 
-# Check and install OpenCode
-if command -v opencode &> /dev/null; then
-    print_success "OpenCode installed: $(opencode --version 2>/dev/null || echo 'version unknown')"
-else
-    print_info "OpenCode not found. Installing..."
-    npm install -g opencode-ai 2>/dev/null && {
-        print_success "OpenCode installed"
-    } || {
-        print_error "Failed to install OpenCode"
-        print_info "Manual install: npm install -g opencode-ai"
-    }
-fi
 
 echo ""
 
@@ -324,20 +312,6 @@ else
 fi
 echo ""
 
-# OpenCode MCP
-prompt_read "Install OpenCode MCP? (y/n): " install_opencode
-if [ "$install_opencode" = "y" ] || [ "$install_opencode" = "Y" ]; then
-    print_info "Installing OpenCode MCP..."
-    claude mcp remove opencode 2>/dev/null || true
-    claude mcp add opencode -- npx -y opencode-mcp 2>/dev/null && {
-        print_success "OpenCode MCP installed"
-    } || {
-        print_error "OpenCode MCP installation failed"
-        print_info "Manual install: claude mcp add opencode -- npx -y opencode-mcp"
-    }
-else
-    print_info "Skipping OpenCode MCP"
-fi
 echo ""
 
 # ═══════════════════════════════════════════════
@@ -418,83 +392,6 @@ else
 fi
 echo ""
 
-# Sync OpenCode Config
-if command -v opencode &> /dev/null; then
-    print_step "Syncing config to OpenCode..."
-    OPENCODE_DIR="$HOME/.config/opencode"
-    mkdir -p "$OPENCODE_DIR"
-
-    # 1. opencode.json（动态替换 $HOME）
-    if [ -f "$SCRIPT_DIR/global/opencode/opencode.json.template" ]; then
-        if [ -f "$OPENCODE_DIR/opencode.json" ]; then
-            print_info "opencode.json already exists. Backing up..."
-            cp "$OPENCODE_DIR/opencode.json" "$OPENCODE_DIR/opencode.json.backup.$(date +%Y%m%d%H%M%S)"
-        fi
-        sed "s|\\\$HOME|$HOME|g" "$SCRIPT_DIR/global/opencode/opencode.json.template" > "$OPENCODE_DIR/opencode.json"
-        print_success "Synced opencode.json"
-    else
-        print_info "No opencode.json template found"
-    fi
-
-    # 2. oh-my-opencode.json
-    if [ -f "$SCRIPT_DIR/global/opencode/oh-my-opencode.json" ]; then
-        if [ ! -f "$OPENCODE_DIR/oh-my-opencode.json" ]; then
-            cp "$SCRIPT_DIR/global/opencode/oh-my-opencode.json" "$OPENCODE_DIR/oh-my-opencode.json"
-            print_success "Synced oh-my-opencode.json"
-        else
-            print_info "oh-my-opencode.json already exists, skipping"
-        fi
-    fi
-
-    # 3. tui.json
-    if [ -f "$SCRIPT_DIR/global/opencode/tui.json" ]; then
-        if [ ! -f "$OPENCODE_DIR/tui.json" ]; then
-            cp "$SCRIPT_DIR/global/opencode/tui.json" "$OPENCODE_DIR/tui.json"
-            print_success "Synced tui.json"
-        else
-            print_info "tui.json already exists, skipping"
-        fi
-    fi
-
-    # 4. 安装 @opencode-ai/plugin 依赖
-    if [ ! -f "$OPENCODE_DIR/package.json" ]; then
-        cat > "$OPENCODE_DIR/package.json" << 'PKGEOF'
-{
-  "dependencies": {
-    "@opencode-ai/plugin": "1.4.6"
-  }
-}
-PKGEOF
-    fi
-    (cd "$OPENCODE_DIR" && npm install --silent 2>/dev/null) && {
-        print_success "OpenCode plugin SDK installed"
-    } || {
-        print_info "npm install in opencode config dir failed, please run manually"
-    }
-
-    # 5. 全局插件安装
-    print_info "Installing OpenCode global plugins..."
-    OPENCODE_PLUGINS=(
-        "opencode-aicodewith-auth"
-        "oh-my-openagent@latest"
-        "opencode-agent-memory"
-        "@tarquinen/opencode-dcp"
-        "opencode-vibeguard"
-    )
-    for plugin in "${OPENCODE_PLUGINS[@]}"; do
-        if npm list -g "$plugin" &>/dev/null; then
-            print_success "Already installed: $plugin"
-        else
-            npm install -g "$plugin" 2>/dev/null && {
-                print_success "Installed: $plugin"
-            } || {
-                print_info "Failed: $plugin (install manually: npm install -g $plugin)"
-            }
-        fi
-    done
-else
-    print_info "OpenCode not installed, skipping config sync"
-fi
 echo ""
 
 # ═══════════════════════════════════════════════

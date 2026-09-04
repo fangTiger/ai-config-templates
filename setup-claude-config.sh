@@ -319,10 +319,10 @@ echo -e "${CYAN}═════════════════════�
 echo -e "${CYAN}  MCP Tools (Multi-AI Collaboration)${NC}"
 echo -e "${CYAN}═══════════════════════════════════════════════${NC}"
 echo ""
-print_step "MCP enables Claude to call Codex, Gemini and OpenCode as tools"
+print_step "MCP enables Claude to call Codex and Gemini as tools"
 echo ""
 
-prompt_read "Install MCP tools (Codex + Gemini + OpenCode)? (y/n): " install_mcp
+prompt_read "Install MCP tools (Codex + Gemini)? (y/n): " install_mcp
 if [ "$install_mcp" = "y" ] || [ "$install_mcp" = "Y" ]; then
     # Method 1: Copy .mcp.json template (recommended)
     if [ -f "$TEMPLATE_DIR/.mcp.json" ]; then
@@ -333,7 +333,6 @@ if [ "$install_mcp" = "y" ] || [ "$install_mcp" = "Y" ]; then
         fi
         cp "$TEMPLATE_DIR/.mcp.json" ./.mcp.json
         print_success "MCP configuration installed (.mcp.json)"
-        print_info "Included: codex (Codex CLI), gemini-cli (Gemini), opencode (OpenCode)"
     else
         # Method 2: Fallback to claude mcp add commands
         print_info "No .mcp.json template found, using claude mcp add..."
@@ -352,30 +351,14 @@ if [ "$install_mcp" = "y" ] || [ "$install_mcp" = "Y" ]; then
                 print_success "Gemini MCP installed"
             } || print_error "Gemini MCP installation failed"
 
-            # OpenCode MCP
-            print_info "Installing OpenCode MCP..."
-            claude mcp remove opencode -s project 2>/dev/null || true
-            claude mcp add opencode -s project -- npx -y opencode-mcp 2>/dev/null && {
-                print_success "OpenCode MCP installed"
-            } || print_error "OpenCode MCP installation failed"
         else
             print_error "Claude CLI not found. Please install Claude Code first."
             print_info "Manual install:"
             print_info "  claude mcp add codex -s project -- codex mcp-server"
             print_info "  claude mcp add gemini-cli -s project -- npx -y gemini-mcp-tool"
-            print_info "  claude mcp add opencode -s project -- npx -y opencode-mcp"
         fi
     fi
 
-    # OpenCode project config
-    print_step "Installing OpenCode project config..."
-    if [ -f "$TEMPLATE_DIR/templates/opencode.json" ] && [ ! -f ./opencode.json ]; then
-        cp "$TEMPLATE_DIR/templates/opencode.json" ./opencode.json
-        print_success "opencode.json installed"
-    elif [ -f ./opencode.json ]; then
-        print_info "opencode.json already exists, skipping"
-    fi
-    mkdir -p .opencode/plugins
     if [ -f "$TEMPLATE_DIR/templates/AGENTS.md" ] && [ ! -f ./AGENTS.md ]; then
         cp "$TEMPLATE_DIR/templates/AGENTS.md" ./AGENTS.md
         print_success "AGENTS.md installed"
