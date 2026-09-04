@@ -475,15 +475,23 @@ else
     SOURCE_REV="unknown"
 fi
 
+# templateRoot 直插 heredoc 会在路径含引号/反斜杠时生成非法 JSON，先转义
+if command -v python3 &> /dev/null; then
+    TEMPLATE_ROOT_JSON=$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$TEMPLATE_DIR")
+else
+    TEMPLATE_ROOT_JSON="\"$(printf '%s' "$TEMPLATE_DIR" | sed 's/\\/\\\\/g; s/"/\\"/g')\""
+fi
+
 cat > "$PROJECT_MANIFEST" << MANIFESTEOF
 {
-  "manifestSchemaVersion": 1,
+  "manifestSchemaVersion": 2,
   "harnessVersion": "v2",
   "role": "project",
   "mode": "$DEFAULT_MODE",
   "globalVersionRequired": "v2",
   "sourceRevision": "$SOURCE_REV",
   "templateHash": "$PROJ_HASH",
+  "templateRoot": $TEMPLATE_ROOT_JSON,
   "managedAssets": [
     "CLAUDE.md",
     "AGENTS.md",

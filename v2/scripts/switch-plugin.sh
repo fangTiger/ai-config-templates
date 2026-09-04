@@ -22,6 +22,7 @@ GLOBAL_MANIFEST="$HOME/.claude/.harness-manifest.json"
 PROJECT_MANIFEST="$CLAUDE_DIR/.harness-manifest.json"
 GRAPHIFY_IGNORE_TEMPLATE="$V2_DIR/graphifyignore.template"
 RESET_SESSION_STATE=false
+FORCE_OVERWRITE=false
 PRESERVED_CODEX_SESSION_STATE=""
 
 # 颜色
@@ -174,6 +175,30 @@ profile_hash_source() {
     fi
 }
 
+# 安装 profile 的项目级文件（profile/project-files/** → 项目根同名路径）
+# 用于 CLAUDE.md 之外、必须落在项目根的受管配置，例如 docs/agents/issue-tracker.md。
+# 切换离开时不清理：这些是普通项目文档，删除比留下更危险。
+install_project_files() {
+    local profile_dir=$1
+    local dry_run=$2
+    local src="$profile_dir/project-files"
+
+    [[ -d "$src" ]] || return 0
+
+    if [[ "$dry_run" == "true" ]]; then
+        echo -e "  ${YELLOW}[DRY-RUN]${NC} 安装 project-files 到项目根:"
+        (cd "$src" && find . -type f | sed 's|^\./|    |')
+        return 0
+    fi
+
+    (cd "$src" && find . -type f -print0) | while IFS= read -r -d '' rel; do
+        rel="${rel#./}"
+        mkdir -p "$PROJECT_DIR/$(dirname "$rel")"
+        cp "$src/$rel" "$PROJECT_DIR/$rel"
+        echo -e "  ${GREEN}✓${NC} $rel"
+    done
+}
+
 ensure_graphify_assets() {
     local dry_run=$1
 
@@ -219,6 +244,9 @@ usage() {
     echo ""
     echo "Profiles:"
     echo "  superpowers  Superpowers（默认）— Claude 主实现 + 多 Agent 编排"
+    echo "  mps          mattpocock-skills — Claude 全包（关闭 superpowers）"
+    echo "  codex-mps-dev      mps 链路 — Claude 设计 + Codex 实现"
+    echo "  codex-codex-mps-dev mps 链路 — Codex 主工作台"
     echo "  ecc          Everything Claude Code — AgentShield + Plankton"
     echo "  omc          Oh My ClaudeCode — Team/Ultrawork + 32 Agent"
     echo "  teams        Superpowers Teams — 原生 Agent Teams"
@@ -230,6 +258,7 @@ usage() {
     echo "  --list       列出可用 profiles"
     echo "  --dry-run    预览（不执行）"
     echo "  --reset-session-state  切换 Codex-native profile 时重置 .codex/session-state.md"
+    echo "  --force-overwrite      检测到漂移时直接覆盖本地修改（非交互环境用）"
     echo "  -h, --help   帮助"
 }
 
@@ -247,25 +276,41 @@ read_manifest_field() {
 }
 
 # 更新 manifest 字段
+# 同时写回 templateRoot（本脚本所属的模板副本）与 schema 版本，使 schema v1 的旧项目
+# 在第一次切换后自愈——机器上存在多个模板副本时，这能让后续解析直接命中正确的那个。
+# 参数以 argv 传入，避免路径含引号时破坏 Python 源码。
 update_manifest() {
     local file=$1
     local mode=$2
     local hash=$3
+    local template_root=$V2_DIR
+
     if command -v python3 &>/dev/null; then
-        python3 -c "
-import json, datetime
-with open('$file', 'r') as f:
-    d = json.load(f)
-d['mode'] = '$mode'
-d['templateHash'] = '$hash'
-d['switchedAt'] = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
-with open('$file', 'w') as f:
-    json.dump(d, f, indent=2)
-" 2>/dev/null
+        python3 - "$file" "$mode" "$hash" "$template_root" <<'PY' 2>/dev/null
+import json, sys, datetime
+
+path, mode, hash_value, template_root = sys.argv[1:5]
+with open(path) as f:
+    data = json.load(f)
+data["mode"] = mode
+data["templateHash"] = hash_value
+data["templateRoot"] = template_root
+data["manifestSchemaVersion"] = 2
+data["switchedAt"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+with open(path, "w") as f:
+    json.dump(data, f, indent=2)
+PY
     elif command -v jq &>/dev/null; then
-        local tmp=$(mktemp)
-        jq --arg m "$mode" --arg h "$hash" --arg t "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            '.mode=$m | .templateHash=$h | .switchedAt=$t' "$file" > "$tmp" && mv "$tmp" "$file"
+        local tmp
+        tmp=$(mktemp)
+        jq --arg m "$mode" --arg h "$hash" --arg r "$template_root" \
+            --arg t "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '.mode=$m | .templateHash=$h | .templateRoot=$r
+             | .manifestSchemaVersion=2 | .switchedAt=$t' "$file" > "$tmp" && mv "$tmp" "$file"
+    else
+        # 既无 python3 也无 jq：过去在此静默返回，调用方仍报成功。改为显式告警。
+        echo -e "  ${RED}✗ 缺少 python3/jq，manifest 未更新（mode 仍是旧值）${NC}" >&2
+        return 1
     fi
 }
 
@@ -431,6 +476,17 @@ switch_profile() {
     local target_is_codex_native=false
     local current_is_codex_native=false
 
+    # 前置检查：禁止在模板仓库自身执行
+    # 模板仓库根的 CLAUDE.md / AGENTS.md 是纳入版本管理的交付物模板，
+    # 切换会用 profile 文件覆盖它们，破坏仓库自身的产物。
+    if [[ -d "$PROJECT_DIR/v2/scripts/plugin-profiles" ]]; then
+        echo -e "${RED}错误: 当前目录是模板仓库本身，禁止在此执行切换${NC}"
+        echo "  切换会用 profile 文件覆盖仓库根的 CLAUDE.md / AGENTS.md 模板。"
+        echo "  请到目标项目目录执行："
+        echo "    cd /path/to/your-project && $0 $target"
+        exit 1
+    fi
+
     # 前置检查：全局 manifest
     if [[ ! -f "$GLOBAL_MANIFEST" ]]; then
         echo -e "${RED}错误: 全局 manifest 不存在${NC}"
@@ -488,11 +544,23 @@ switch_profile() {
         echo -e "  记录 hash: $recorded_hash"
         echo -e "  实际 hash: $actual_hash"
         if [[ "$dry_run" != "true" ]]; then
-            echo -n "  覆盖本地修改？(y=覆盖, n=取消): "
-            read confirm
-            if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
-                echo "已取消切换"
-                exit 0
+            if [[ "$FORCE_OVERWRITE" == "true" ]]; then
+                echo -e "  ${YELLOW}--force-overwrite 已指定，覆盖本地修改${NC}"
+            elif [[ ! -t 0 ]]; then
+                # 非交互环境（如会话内调用）下裸 read 会因 set -e 静默退出，
+                # 连"已取消切换"都不会打印。这里显式失败并给出可执行的出路。
+                echo -e "  ${RED}✗ 检测到漂移，但当前不是交互终端，无法确认${NC}"
+                echo "  请任选其一："
+                echo "    1. 在外部终端执行: cd $PROJECT_DIR && $0 $target"
+                echo "    2. 确认要丢弃本地修改后重跑: $0 $target --force-overwrite"
+                exit 2
+            else
+                echo -n "  覆盖本地修改？(y=覆盖, n=取消): "
+                read confirm
+                if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+                    echo "已取消切换"
+                    exit 0
+                fi
             fi
         fi
     else
@@ -611,6 +679,8 @@ switch_profile() {
         echo -e "  ${YELLOW}[DRY-RUN]${NC} 复制 shared + $target 文件"
     fi
 
+    install_project_files "$profile_dir" "$dry_run"
+
     if [[ "$target_is_codex_native" != "true" ]]; then
         ensure_graphify_assets "$dry_run"
     elif [[ ! -f "$PROJECT_DIR/.graphifyignore" && -f "$GRAPHIFY_IGNORE_TEMPLATE" && "$dry_run" != "true" ]]; then
@@ -663,7 +733,17 @@ switch_profile() {
     echo -e "${YELLOW}注意事项：${NC}"
     echo "  1. 需要重启 Claude Code 会话才能生效"
     echo "  2. 退出当前会话，重新运行 claude 即可"
-    if [[ "$target" == "ecc" ]]; then
+    if [[ "$target" == "codex-mps-dev" ]]; then
+        echo "  3. 首次使用请注册 marketplace: claude plugin marketplace add mattpocock/skills"
+        echo "  4. 本模式 Claude 只做设计与审查，实现交给 Codex（codex-handoff skill）"
+        echo "  5. 落点权威定义在 docs/agents/issue-tracker.md（已随本 profile 安装）"
+        echo "     交接时必须把该约束显式注入 developer-instructions"
+    elif [[ "$target" == "mps" ]]; then
+        echo "  3. 首次使用请注册 marketplace: claude plugin marketplace add mattpocock/skills"
+        echo "  4. 默认无需运行 /setup-matt-pocock-skills（已预置 docs/agents/issue-tracker.md）"
+        echo "     必须运行时 Section A 请选 Other，不要选「本地文件」（其路径写死 .scratch/）"
+        echo "  5. 本模式已关闭 superpowers 插件，避免同职责 skill 争抢触发"
+    elif [[ "$target" == "ecc" ]]; then
         echo "  3. 首次使用 ECC 请运行 /configure-ecc"
     elif [[ "$target" == "omc" ]]; then
         echo "  3. 首次使用 OMC 请运行 /oh-my-claudecode:omc-setup"
@@ -672,6 +752,11 @@ switch_profile() {
         echo "  4. 建议安装 tmux: brew install tmux"
     elif [[ "$target" == "codex-dev" ]]; then
         echo "  3. 提案通过后使用 codex-handoff skill 进行上下文交接"
+    elif [[ "$target" == "codex-codex-mps-dev" ]]; then
+        echo "  3. 重启 Codex 会话后读取项目根 AGENTS.md"
+        echo "  4. 落点权威定义在 docs/agents/issue-tracker.md（已随本 profile 安装）"
+        echo "  5. .codex/skills/ 是 mattpocock skill 的英文原样副本（pin 1.2.3）"
+        echo "     其正文默认发 issue tracker，以 docs/agents/issue-tracker.md 为准"
     elif [[ "$target_is_codex_native" == "true" ]]; then
         echo "  3. 重启 Codex 会话后读取项目根 AGENTS.md"
     fi
@@ -692,6 +777,7 @@ main() {
             --list) list_profiles; exit 0 ;;
             --dry-run) dry_run=true; shift ;;
             --reset-session-state) RESET_SESSION_STATE=true; shift ;;
+            --force-overwrite) FORCE_OVERWRITE=true; shift ;;
             -h|--help) usage; exit 0 ;;
             -*)
                 echo -e "${RED}未知参数: $1${NC}"

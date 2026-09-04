@@ -1,0 +1,442 @@
+{
+    "version": "1.1",
+    "description": "Skill activation triggers - codex-mps-dev (Claude 设计 + Codex 实现 + mattpocock)",
+    "skills": {
+        "dev-workflow": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "SDD Development workflow management with strict phase ordering",
+            "promptTriggers": {
+                "keywords": [
+                    "development workflow",
+                    "dev workflow",
+                    "requirement",
+                    "design document",
+                    "code review",
+                    "test report",
+                    "phase",
+                    "spec",
+                    "specification",
+                    "SDD",
+                    "task progress",
+                    "acceptance criteria",
+                    "business rules"
+                ],
+                "intentPatterns": [
+                    "(create|write|start).*?(requirement|spec|design|review)",
+                    "(check|validate).*?(phase|prerequisite|progress)",
+                    "(advance|move).*?phase",
+                    "(what|which).*?phase",
+                    "(how to|best practice).*?(development|workflow|SDD)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    ".devos/tasks/**/*.md",
+                    "**/spec.md",
+                    "**/design.md",
+                    "**/review.md",
+                    "**/test-report.md",
+                    "**/requirement.md"
+                ],
+                "contentPatterns": [
+                    "## Intent",
+                    "## Acceptance Criteria",
+                    "## Business Rules",
+                    "Phase:",
+                    "Task ID:"
+                ]
+            }
+        },
+        "git-workflow": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Git workflow management for team collaboration",
+            "promptTriggers": {
+                "keywords": [
+                    "git",
+                    "commit",
+                    "branch",
+                    "merge",
+                    "pull request",
+                    "PR",
+                    "code review",
+                    "git workflow",
+                    "feature branch",
+                    "hotfix"
+                ],
+                "intentPatterns": [
+                    "(create|make|do).*?(commit|branch|PR|pull request)",
+                    "(merge|rebase).*?branch",
+                    "(review|check).*?(PR|pull request|commit)",
+                    "(how to|best practice).*?(git|commit|branch)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    ".git/**",
+                    ".gitignore",
+                    ".gitattributes"
+                ]
+            }
+        },
+        "skill-developer": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Meta-skill for creating and managing Claude Code skills",
+            "promptTriggers": {
+                "keywords": [
+                    "skill system",
+                    "create skill",
+                    "add skill",
+                    "skill triggers",
+                    "skill rules",
+                    "hook system",
+                    "skill development",
+                    "skill-rules.json"
+                ],
+                "intentPatterns": [
+                    "(how do|how does|explain).*?skill",
+                    "(create|add|modify|build).*?skill",
+                    "skill.*?(work|trigger|activate|system)"
+                ]
+            }
+        },
+        "python-backend-guidelines": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Backend development patterns for Python/Django/FastAPI",
+            "promptTriggers": {
+                "keywords": [
+                    "backend",
+                    "backend development",
+                    "API",
+                    "endpoint",
+                    "view",
+                    "viewset",
+                    "serializer",
+                    "Django",
+                    "FastAPI",
+                    "service",
+                    "repository",
+                    "route",
+                    "routing",
+                    "middleware",
+                    "validation",
+                    "Pydantic",
+                    "SQLAlchemy",
+                    "Django ORM",
+                    "database access",
+                    "async",
+                    "dependency injection"
+                ],
+                "intentPatterns": [
+                    "(create|add|implement|build).*?(route|endpoint|API|view|viewset|service|repository)",
+                    "(fix|handle|debug).*?(error|exception|backend)",
+                    "(add|implement).*?(middleware|validation|error.*?handling)",
+                    "(organize|structure|refactor).*?(backend|service|API)",
+                    "(how to|best practice).*?(backend|route|view|service|Django|FastAPI)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "**/*.py",
+                    "**/views.py",
+                    "**/serializers.py",
+                    "**/services.py",
+                    "**/repositories.py",
+                    "**/models.py",
+                    "**/urls.py",
+                    "**/routers/*.py",
+                    "**/api/**/*.py",
+                    "**/endpoints/**/*.py",
+                    "backend/**/*.py",
+                    "api/**/*.py",
+                    "server/**/*.py",
+                    "app/**/*.py"
+                ],
+                "pathExclusions": [
+                    "**/*_test.py",
+                    "**/test_*.py",
+                    "**/*_tests.py",
+                    "**/tests.py",
+                    "**/conftest.py",
+                    "**/__pycache__/**",
+                    "**/migrations/**",
+                    "**/venv/**",
+                    "**/.venv/**"
+                ],
+                "contentPatterns": [
+                    "from fastapi import",
+                    "from django",
+                    "@router\\.",
+                    "@api_view",
+                    "class.*ViewSet",
+                    "class.*APIView",
+                    "from sqlalchemy",
+                    "from pydantic import"
+                ]
+            }
+        },
+        "python-error-tracking": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Sentry error tracking and performance monitoring for Python",
+            "promptTriggers": {
+                "keywords": [
+                    "error handling",
+                    "exception",
+                    "sentry",
+                    "error tracking",
+                    "capture_exception",
+                    "monitoring",
+                    "performance tracking",
+                    "logging"
+                ],
+                "intentPatterns": [
+                    "(add|create|implement|setup).*?(error handling|sentry|error tracking)",
+                    "(fix|handle|catch).*?(error|exception)",
+                    "(how to|best practice).*?(error|sentry|monitoring)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "**/views.py",
+                    "**/serializers.py",
+                    "**/services.py",
+                    "**/tasks.py",
+                    "**/celery.py",
+                    "**/endpoints/**/*.py",
+                    "**/routers/**/*.py",
+                    "**/*_service.py",
+                    "**/*Service.py"
+                ],
+                "contentPatterns": [
+                    "import sentry_sdk",
+                    "sentry_sdk\\.",
+                    "capture_exception",
+                    "capture_message",
+                    "try:",
+                    "except.*Exception"
+                ]
+            }
+        },
+        "mattpocock-skills:tdd": {
+            "type": "workflow",
+            "enforcement": "suggest",
+            "priority": "critical",
+            "description": "红-绿-重构循环，垂直切片实现功能",
+            "promptTriggers": {
+                "keywords": [
+                    "实现",
+                    "写代码",
+                    "新功能",
+                    "重构",
+                    "TDD",
+                    "测试先行",
+                    "implement",
+                    "feature",
+                    "refactor",
+                    "red-green"
+                ],
+                "intentPatterns": [
+                    "(实现|新增|添加|编写).*?(功能|接口|方法|模块)",
+                    "(implement|add|build).*?(feature|endpoint|module)",
+                    "(修改|调整).*?(逻辑|行为)"
+                ]
+            }
+        },
+        "mattpocock-skills:code-review": {
+            "type": "workflow",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "双轴审查：标准符合度 + spec 保真度",
+            "promptTriggers": {
+                "keywords": [
+                    "审查",
+                    "代码审查",
+                    "review",
+                    "检查代码",
+                    "提交前",
+                    "合并前"
+                ],
+                "intentPatterns": [
+                    "(审查|检查|review).*?(代码|实现|改动|diff)",
+                    "(准备|即将).*?(提交|合并|PR)"
+                ]
+            }
+        },
+        "mattpocock-skills:diagnosing-bugs": {
+            "type": "workflow",
+            "enforcement": "suggest",
+            "priority": "critical",
+            "description": "结构化循环隔离并修复难缠的 bug",
+            "promptTriggers": {
+                "keywords": [
+                    "bug",
+                    "报错",
+                    "异常",
+                    "失败",
+                    "不工作",
+                    "排查",
+                    "调试",
+                    "error",
+                    "failing",
+                    "broken",
+                    "debug"
+                ],
+                "intentPatterns": [
+                    "(为什么|怎么).*?(失败|报错|不生效|不可用)",
+                    "(修复|解决|排查).*?(bug|问题|错误|异常)",
+                    "(test|测试).*?(失败|挂了|red)"
+                ]
+            }
+        },
+        "mattpocock-skills:domain-modeling": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "medium",
+            "description": "压力测试术语并演进概念清晰度，维护 CONTEXT.md",
+            "promptTriggers": {
+                "keywords": [
+                    "术语",
+                    "领域",
+                    "概念",
+                    "命名",
+                    "词汇表",
+                    "glossary",
+                    "domain",
+                    "terminology",
+                    "CONTEXT.md"
+                ],
+                "intentPatterns": [
+                    "(这个|该).*?(叫什么|怎么命名)",
+                    "(定义|澄清|统一).*?(术语|概念|叫法)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "CONTEXT.md"
+                ]
+            }
+        },
+        "mattpocock-skills:codebase-design": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "medium",
+            "description": "建立共享模块设计原则与清晰接口",
+            "promptTriggers": {
+                "keywords": [
+                    "架构",
+                    "模块设计",
+                    "接口设计",
+                    "抽象",
+                    "耦合",
+                    "architecture",
+                    "module",
+                    "interface",
+                    "coupling"
+                ],
+                "intentPatterns": [
+                    "(设计|规划).*?(模块|接口|架构|结构)",
+                    "(拆分|重组).*?(模块|目录|包)"
+                ]
+            }
+        },
+        "openspec-workflow": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "OpenSpec proposal/apply/archive workflow guidance",
+            "promptTriggers": {
+                "keywords": [
+                    "openspec",
+                    "change proposal",
+                    "spec delta",
+                    "proposal",
+                    "archive change",
+                    "变更提案",
+                    "规范变更",
+                    "归档变更"
+                ],
+                "intentPatterns": [
+                    "(create|write|start|draft).*?(proposal|openspec|spec)",
+                    "(apply|implement|continue).*?(openspec|change)",
+                    "(archive|finalize).*?(change|openspec)",
+                    "(创建|编写|起草).*(提案|规范|openspec)",
+                    "(实现|继续).*(变更|openspec)",
+                    "(归档|完成).*(变更|openspec)"
+                ]
+            }
+        },
+        "codex-handoff": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Codex handoff orchestration for codex-dev implementation flow",
+            "promptTriggers": {
+                "keywords": [
+                    "codex handoff",
+                    "handoff",
+                    "codex 实现",
+                    "codex-reply",
+                    "交给 codex",
+                    "开始实现",
+                    "继续实现",
+                    "executor: codex"
+                ],
+                "intentPatterns": [
+                    "(start|begin|continue|handoff).*?(codex|implementation)",
+                    "(delegate|route).*?(codex)",
+                    "(开始|继续|交给).*(codex|实现|交接)"
+                ]
+            }
+        },
+        "session-recovery": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Recover interrupted codex-dev workflow state from session-state metadata",
+            "promptTriggers": {
+                "keywords": [
+                    "resume session",
+                    "session-state",
+                    "continue this change",
+                    "接着做",
+                    "恢复会话",
+                    "刚才在做什么"
+                ],
+                "intentPatterns": [
+                    "(resume|recover|continue).*?(session|workflow|task|change)",
+                    "what.*were.*doing",
+                    "(继续|恢复|接着).*(会话|工作流|任务|变更)",
+                    "刚才.*(做什么|做到哪)"
+                ]
+            }
+        }
+    },
+    "notes": {
+        "enforcement_types": {
+            "suggest": "Skill suggestion appears but doesn't block execution",
+            "block": "Requires skill to be used before proceeding (guardrail)",
+            "warn": "Shows warning but allows proceeding"
+        },
+        "priority_levels": {
+            "critical": "Highest - Always trigger when matched",
+            "high": "Important - Trigger for most matches",
+            "medium": "Moderate - Trigger for clear matches",
+            "low": "Optional - Trigger only for explicit matches"
+        },
+        "customization": {
+            "pathPatterns": "Adjust these to match your specific project structure",
+            "keywords": "Add domain-specific terms relevant to your project",
+            "intentPatterns": "Use regex for flexible user intent matching",
+            "multi_ai": "This configuration supports Multi-AI collaboration with Codex and Gemini via MCP"
+        }
+    }
+}
