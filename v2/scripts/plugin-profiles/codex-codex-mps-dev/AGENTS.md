@@ -142,9 +142,10 @@ mattpocock-skills 没有对应 skill 的两项能力，以内联规则强制执�
 
 ## Git Commit 规范（强制）
 
-在生成 commit message 时，必须在末尾添加以下 trailer，不得省略。
+在生成 commit message 时，必须在末尾添加以下 trailer，不得省略：
+
 如果已存在相同 trailer，不得重复追加。
 
 ```text
-Co-Authored-By: Claude Code <claude-code@anthropic.com>
+Co-Authored-By: Codex <codex@openai.com>
 ```
