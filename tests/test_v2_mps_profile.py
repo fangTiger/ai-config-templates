@@ -258,6 +258,76 @@ class MpsProfileTemplateTests(unittest.TestCase):
         self.assertTrue("mps" in text, "switch-plugin.sh usage 未提及 mps")
 
 
+class BackupPlacementTests(unittest.TestCase):
+    """备份必须按 agent 归位：Claude 资产进 .claude/，Codex 资产进 .codex/。"""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.tmp_path = Path(self.tmp.name)
+        self.env = make_env(self.tmp_path)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _backups(self, project, side):
+        d = project / side / ".harness-backups"
+        return sorted(p for p in d.iterdir() if p.is_dir()) if d.is_dir() else []
+
+    def test_claude_side_switch_backs_up_to_claude_only(self):
+        project = make_v2_project(self.tmp_path, self.env, mode="superpowers")
+        switch_to(project, self.env, MPS_PROFILE)
+
+        claude_bk = self._backups(project, ".claude")
+        self.assertTrue(claude_bk, "缺少 .claude/.harness-backups/")
+        names = {p.name for p in claude_bk[0].iterdir()}
+        self.assertIn("CLAUDE.md", names)
+        self.assertIn("settings.json", names)
+        self.assertNotIn(
+            ".codex", names, "Codex 资产不应出现在 Claude 侧备份中"
+        )
+
+    def test_codex_native_switch_backs_up_to_codex(self):
+        """纯 Codex 项目里 CLAUDE.md 不存在，Codex 资产必须备份到 .codex/。"""
+        project = make_v2_project(self.tmp_path, self.env, mode="codex-codex-dev")
+        switch_to(project, self.env, MPS_CODEX_PROFILE)
+
+        codex_bk = self._backups(project, ".codex")
+        self.assertTrue(codex_bk, "缺少 .codex/.harness-backups/")
+        names = {p.name for p in codex_bk[0].iterdir()}
+        self.assertIn("AGENTS.md", names, "Codex 入口文件未备份到 Codex 侧")
+        self.assertTrue(
+            {"skills", "config.toml", "hooks.json"} & names,
+            f"Codex 运行资产未备份，实际: {sorted(names)}",
+        )
+
+    def test_no_legacy_backup_dirs_created(self):
+        """不再产生 .claude/.backup-* 这种混装目录。"""
+        project = make_v2_project(self.tmp_path, self.env, mode="codex-codex-dev")
+        switch_to(project, self.env, MPS_CODEX_PROFILE)
+        legacy = list((project / ".claude").glob(".backup-*"))
+        self.assertFalse(legacy, f"仍在生成旧式备份目录: {[p.name for p in legacy]}")
+
+    def test_backup_dir_naming_is_timestamp_then_mode(self):
+        project = make_v2_project(self.tmp_path, self.env, mode="superpowers")
+        switch_to(project, self.env, MPS_PROFILE)
+        name = self._backups(project, ".claude")[0].name
+        self.assertRegex(
+            name, r"^\d{14}-superpowers$", f"备份目录命名不符: {name}"
+        )
+
+    def test_empty_side_creates_no_backup_dir(self):
+        """Claude 侧无内容时不应留下空的备份目录。"""
+        project = make_v2_project(self.tmp_path, self.env, mode="codex-codex-dev")
+        # codex-native 项目没有 CLAUDE.md，但有 settings.json，故 Claude 侧仍会有备份；
+        # 这里只断言不产生「空目录」
+        switch_to(project, self.env, MPS_CODEX_PROFILE)
+        for side in (".claude", ".codex"):
+            for d in self._backups(project, side):
+                self.assertTrue(
+                    any(d.iterdir()), f"{side} 下产生了空备份目录 {d.name}"
+                )
+
+
 class MpsHandoffProfileTests(unittest.TestCase):
     """codex-mps-dev：Claude 设计 + Codex 实现，mps 工作流。"""
 

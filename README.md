@@ -201,6 +201,72 @@ ls <模板仓库路径>/v2/scripts/plugin-profiles/
 切换成功后，模板路径会写回项目的 `.claude/.harness-manifest.json`，之后 `/switch-profile`
 直接命中，不用再指定。
 
+### 完整命令参考
+
+把 `<模板>` 替换成你克隆仓库的路径。所有切换命令都要**在项目根目录**执行。
+
+```bash
+# ── 安装 ───────────────────────────────────────────────
+<模板>/v2/setup-global.sh                        # 装全局（每台机器一次）
+<模板>/v2/setup-project.sh                       # 初始化项目，默认 superpowers
+<模板>/v2/setup-project.sh --mode=mps            # 初始化并直接指定模式
+<模板>/v2/setup-project.sh --migrate             # 项目已有 .claude/ 时用这个接管
+<模板>/v2/setup-project.sh --migrate --mode=mps  # 接管 + 指定模式
+
+# ── 查看 ───────────────────────────────────────────────
+<模板>/v2/scripts/switch-plugin.sh --status      # 当前模式
+<模板>/v2/scripts/switch-plugin.sh --list        # 全部可用模式
+<模板>/v2/scripts/switch-plugin.sh mps --dry-run # 预览影响，不落盘
+
+# ── 切换：Claude 侧（工作在 Claude Code）───────────────
+<模板>/v2/scripts/switch-plugin.sh mps                 # Claude 全包
+<模板>/v2/scripts/switch-plugin.sh codex-mps-dev       # Claude 设计 + Codex 实现
+<模板>/v2/scripts/switch-plugin.sh superpowers         # 默认模式
+<模板>/v2/scripts/switch-plugin.sh codex-dev           # Superpowers 版的 Claude 设计 + Codex 实现
+<模板>/v2/scripts/switch-plugin.sh teams
+<模板>/v2/scripts/switch-plugin.sh ecc
+<模板>/v2/scripts/switch-plugin.sh omc
+
+# ── 切换：Codex 主工作台（工作在 Codex CLI，会删掉 CLAUDE.md）──
+<模板>/v2/scripts/switch-plugin.sh codex-codex-mps-dev
+<模板>/v2/scripts/switch-plugin.sh codex-codex-dev
+<模板>/v2/scripts/switch-plugin.sh codex-codex-claude-flow-gpt55-dev
+<模板>/v2/scripts/switch-plugin.sh codex-codex-claude-flow-gpt56-sol-dev
+
+# ── 特殊情况 ───────────────────────────────────────────
+<模板>/v2/scripts/switch-plugin.sh mps --force-overwrite       # 入口文件被改过、确认丢弃时
+<模板>/v2/scripts/switch-plugin.sh codex-codex-mps-dev --reset-session-state  # 强制重置 session-state
+```
+
+会话内等价命令（Claude Code 里，不用退出）：
+
+```
+/switch-profile mps
+/switch-profile --status
+/switch-profile --list
+/switch-profile mps --dry-run
+```
+
+### 切换时的备份
+
+每次切换都会**按 agent 分别备份**当前配置，再装新的：
+
+```
+.claude/.harness-backups/<时间戳>-<原模式>/    ← CLAUDE.md、settings.json、
+                                                   skills/ agents/ commands/ rules/ hooks/
+.codex/.harness-backups/<时间戳>-<原模式>/     ← AGENTS.md、config.toml、hooks.json、
+                                                   session-state.md、skills/ agents/ tools/
+```
+
+哪边没内容就不建目录——纯 Codex 项目不会留下空的 Claude 备份。
+
+`--migrate` 接管既有项目时同理，时间戳后缀是 `-premigrate`。
+
+> 备份**不会自动清理**，每切一次多一份。确认新配置能用之后可以手动删旧的：
+> ```bash
+> ls -t .claude/.harness-backups/ .codex/.harness-backups/
+> ```
+
 ---
 
 ## mps 模式（mattpocock-skills）

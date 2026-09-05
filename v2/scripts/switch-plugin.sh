@@ -529,26 +529,56 @@ switch_profile() {
     fi
 
     # 备份
+    # 按 agent 归位：Claude 资产进 .claude/.harness-backups/，Codex 资产进 .codex/.harness-backups/。
+    # 早期版本把两边混装在 .claude/.backup-* 里——纯 Codex 项目根本没有 CLAUDE.md，
+    # Codex 资产却备份到 Claude 目录下，找不到也说不通。
     echo -e "${YELLOW}[2/6] 备份当前配置...${NC}"
-    local backup_dir="$CLAUDE_DIR/.backup-${current}-$(date +%Y%m%d%H%M%S)"
+    local backup_stamp="$(date +%Y%m%d%H%M%S)-${current}"
+    local claude_backup="$CLAUDE_DIR/.harness-backups/$backup_stamp"
+    local codex_backup="$CODEX_DIR/.harness-backups/$backup_stamp"
+
     if [[ "$dry_run" == "true" ]]; then
-        echo -e "  ${YELLOW}[DRY-RUN]${NC} 备份到 $backup_dir"
+        echo -e "  ${YELLOW}[DRY-RUN]${NC} Claude 侧 → $claude_backup"
+        echo -e "  ${YELLOW}[DRY-RUN]${NC} Codex 侧  → $codex_backup"
     else
-        mkdir -p "$backup_dir"
-        [[ -f "$CLAUDE_DIR/settings.json" ]] && cp "$CLAUDE_DIR/settings.json" "$backup_dir/"
-        [[ -f "$PROJECT_DIR/CLAUDE.md" ]] && cp "$PROJECT_DIR/CLAUDE.md" "$backup_dir/"
-        [[ -f "$PROJECT_DIR/AGENTS.md" ]] && cp "$PROJECT_DIR/AGENTS.md" "$backup_dir/"
-        # 备份所有受管目录的内容
+        # ── Claude 侧 ──
+        local claude_saved=false
+        mkdir -p "$claude_backup"
+        if [[ -f "$PROJECT_DIR/CLAUDE.md" ]]; then
+            cp "$PROJECT_DIR/CLAUDE.md" "$claude_backup/"; claude_saved=true
+        fi
+        if [[ -f "$CLAUDE_DIR/settings.json" ]]; then
+            cp "$CLAUDE_DIR/settings.json" "$claude_backup/"; claude_saved=true
+        fi
         for dir in "${SWITCHABLE_DIRS[@]}"; do
             if [[ -d "$CLAUDE_DIR/$dir" && "$(ls -A "$CLAUDE_DIR/$dir" 2>/dev/null)" ]]; then
-                cp -r "$CLAUDE_DIR/$dir" "$backup_dir/"
+                cp -r "$CLAUDE_DIR/$dir" "$claude_backup/"; claude_saved=true
             fi
         done
-        if [[ -d "$CODEX_DIR" && "$(ls -A "$CODEX_DIR" 2>/dev/null)" ]]; then
-            mkdir -p "$backup_dir"
-            cp -r "$CODEX_DIR" "$backup_dir/.codex"
+        if [[ "$claude_saved" == "true" ]]; then
+            echo -e "  ${GREEN}✓${NC} Claude 侧 → .claude/.harness-backups/$backup_stamp"
+        else
+            rmdir "$claude_backup" 2>/dev/null || true   # 无内容不留空目录
         fi
-        echo -e "  ${GREEN}已完整备份（含 hooks/skills/agents/commands/rules）${NC}"
+
+        # ── Codex 侧 ──
+        local codex_saved=false
+        mkdir -p "$codex_backup"
+        if [[ -f "$PROJECT_DIR/AGENTS.md" ]]; then
+            cp "$PROJECT_DIR/AGENTS.md" "$codex_backup/"; codex_saved=true
+        fi
+        if [[ -d "$CODEX_DIR" ]]; then
+            for entry in "$CODEX_DIR"/*; do
+                [[ -e "$entry" ]] || continue
+                [[ "$(basename "$entry")" == ".harness-backups" ]] && continue
+                cp -r "$entry" "$codex_backup/"; codex_saved=true
+            done
+        fi
+        if [[ "$codex_saved" == "true" ]]; then
+            echo -e "  ${GREEN}✓${NC} Codex 侧  → .codex/.harness-backups/$backup_stamp"
+        else
+            rmdir "$codex_backup" 2>/dev/null || true
+        fi
     fi
 
     # 清理
@@ -713,7 +743,9 @@ switch_profile() {
         echo "  3. 重启 Codex 会话后读取项目根 AGENTS.md"
     fi
     echo ""
-    echo "  备份位置: $backup_dir"
+    echo "  备份位置:"
+    echo "    Claude 侧: .claude/.harness-backups/$backup_stamp"
+    echo "    Codex 侧:  .codex/.harness-backups/$backup_stamp"
 }
 
 # ============================================================

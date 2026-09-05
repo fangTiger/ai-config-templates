@@ -209,22 +209,48 @@ fi
 
 if [ "$is_v1" = true ]; then
     if [ "$MIGRATE_MODE" = true ]; then
-        print_info "检测到 V1 项目，--migrate 模式：将升级为 V2"
-        # 完整备份 V1 配置（包括目录内容）
-        v1_backup="$CLAUDE_DIR/.v1-backup-$(date +%Y%m%d%H%M%S)"
-        mkdir -p "$v1_backup"
-        [ -f "$TARGET_DIR/CLAUDE.md" ] && cp "$TARGET_DIR/CLAUDE.md" "$v1_backup/"
-        [ -f "$CLAUDE_DIR/settings.json" ] && cp "$CLAUDE_DIR/settings.json" "$v1_backup/"
-        [ -f "$CLAUDE_DIR/.active-plugin" ] && cp "$CLAUDE_DIR/.active-plugin" "$v1_backup/"
+        print_info "--migrate 模式：接管现有配置"
+        # 备份按 agent 归位，与 switch-plugin.sh 保持一致
+        backup_stamp="$(date +%Y%m%d%H%M%S)-premigrate"
+        claude_backup="$CLAUDE_DIR/.harness-backups/$backup_stamp"
+        codex_backup="$CODEX_DIR/.harness-backups/$backup_stamp"
+
+        # ── Claude 侧 ──
+        claude_saved=false
+        mkdir -p "$claude_backup"
+        [ -f "$TARGET_DIR/CLAUDE.md" ] && { cp "$TARGET_DIR/CLAUDE.md" "$claude_backup/"; claude_saved=true; }
+        [ -f "$CLAUDE_DIR/settings.json" ] && { cp "$CLAUDE_DIR/settings.json" "$claude_backup/"; claude_saved=true; }
+        [ -f "$CLAUDE_DIR/.active-plugin" ] && { cp "$CLAUDE_DIR/.active-plugin" "$claude_backup/"; claude_saved=true; }
         for dir in hooks skills agents commands rules; do
             if [ -d "$CLAUDE_DIR/$dir" ] && [ "$(ls -A "$CLAUDE_DIR/$dir" 2>/dev/null)" ]; then
-                cp -r "$CLAUDE_DIR/$dir" "$v1_backup/"
+                cp -r "$CLAUDE_DIR/$dir" "$claude_backup/"; claude_saved=true
             fi
         done
-        print_success "V1 配置已完整备份到 $v1_backup"
+        if [ "$claude_saved" = true ]; then
+            print_success "Claude 侧配置已备份 → .claude/.harness-backups/$backup_stamp"
+        else
+            rmdir "$claude_backup" 2>/dev/null || true
+        fi
+
+        # ── Codex 侧 ──
+        codex_saved=false
+        mkdir -p "$codex_backup"
+        [ -f "$TARGET_DIR/AGENTS.md" ] && { cp "$TARGET_DIR/AGENTS.md" "$codex_backup/"; codex_saved=true; }
+        if [ -d "$CODEX_DIR" ]; then
+            for entry in "$CODEX_DIR"/*; do
+                [ -e "$entry" ] || continue
+                [ "$(basename "$entry")" = ".harness-backups" ] && continue
+                cp -r "$entry" "$codex_backup/"; codex_saved=true
+            done
+        fi
+        if [ "$codex_saved" = true ]; then
+            print_success "Codex 侧配置已备份 → .codex/.harness-backups/$backup_stamp"
+        else
+            rmdir "$codex_backup" 2>/dev/null || true
+        fi
     else
-        print_error "检测到 V1 项目（有 .claude/ 配置但无 V2 manifest）"
-        print_info "如需升级到 V2，请使用: $0 --migrate"
+        print_error "项目已有 .claude/ 配置，但不是本脚手架管理的"
+        print_info "用 --migrate 接管（会先按 agent 分别备份现有配置）: $0 --migrate"
         print_info "或手动删除 .claude/ 目录后重新运行"
         exit 1
     fi
